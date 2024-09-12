@@ -5,7 +5,6 @@
   "name": "back-end",
   "version": "1.0.0",
   "main": "server.js",
-  "devDependencies": {},
   "author": "",
   "license": "ISC",
   "description": "",
@@ -15,6 +14,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.4",
     "pg-promise": "^11.9.1"
   }
 }
