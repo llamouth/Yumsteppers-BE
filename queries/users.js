@@ -1,4 +1,5 @@
 const db = require('../db/dbConfig');
+const bcrypt = require('bcrypt')
 
 const getAllUsers = async () => {
     try{
@@ -22,18 +23,20 @@ const getOneUser = async (id) => {
 
 const createUser = async (user) => {
     try {
+        const salt = 10
+        const hashedPassword = await bcrypt.hash(user.password_hash, salt)
         const newUser = await db.one(
-            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned)) VALUES ($1, $2, $3, $4, $5, $6,) RETURNING *", 
+            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6,) RETURNING *", 
             [
                 user.username, 
                 user.email, 
-                user.password_hash, 
+                hashedPassword, 
                 user.latitude, 
                 user.longitude, 
                 user.points_earned
-            ]
+            ] 
         )
-        return newuser
+        return newUser
     } catch (error) {
         return error  
     }
@@ -50,10 +53,39 @@ const deleteUser = async (id) => {
 
 const updateUser = async (id, newInfo) => {
     try{
-        const updatedInfo = await db.one{"UPDATE users SET name=$1, =$2, location=$3, age=$4, main_diet=$5, power=$6, is_dangerous=$7, date_documented=$8 WHERE id=$9 RETURNING *",
+        const currentUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id)
+
+        const passwordMatch = newInfo.password_hash == currentUser.password_hash
+        let updatedInfo ;
+        
+        if(passwordMatch) {
+            updatedInfo = await db.one("UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6 WHERE id=$7 RETURNING *",
+                [
+                newInfo.username, 
+                newInfo.email, 
+                newInfo.password_hash, 
+                newInfo.latitude, 
+                newInfo.longitude, 
+                newInfo.points_earned
+                ])
+        }else {
+            const salt = 10
+            const hashedPassword = await bcrypt.hash(newInfo.password_hash, salt)
+            updatedInfo = await db.one("UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6 WHERE id=$7 RETURNING *",
             [
+            newInfo.username, 
+            newInfo.email, 
+            hashedPassword, 
+            newInfo.latitude, 
+            newInfo.longitude, 
+            newInfo.points_earned
+            ])
+        }
+          return updatedInfo  
+
+        }catch(error) {
 
         }
     }
-}
-module.exports = {getAllUsers,getOneUser,createUser,deleteUser,}
+
+module.exports = {getAllUsers,getOneUser,createUser,deleteUser, updateUser}

@@ -11,4 +11,15 @@ checkins.get('/', async ( req, res ) => {
     }
 })
 
+checkins.get('/:id', async (req, res) => {
+    const { id } = req.params
+    try {
+        const singleCheckin = await getSingleCheckin( id )
+        res.status(200).json(singleCheckin)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+})
+
+
 module.exports = checkins

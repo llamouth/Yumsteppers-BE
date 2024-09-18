@@ -19,8 +19,10 @@ const getSingleCheckin = async (id) => {
 }
 
 const createCheckin = async (checkin) => {
+    const { date, restaurant_id, user_id, receipt_image } = checkin
+    
     try {
-        const newCheckin = await db.one('INSERT INTO checkins (date, restaurant_id, user_id, receipt_image) VALUES($1, $2, $3, $4) RETURNING *')
+        const newCheckin = await db.one('INSERT INTO checkins (date, restaurant_id, user_id, receipt_image) VALUES($1, $2, $3, $4) RETURNING *', [ date, restaurant_id, user_id, receipt_image ]);
         return newCheckin
     } catch (error) {
         return error
