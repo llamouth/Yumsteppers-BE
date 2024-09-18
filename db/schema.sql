@@ -18,13 +18,12 @@ CREATE TABLE restaurants (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     latitude VARCHAR(255) NOT NULL,
-    longitude VARCHAR(255) NOT NULL,
+    longitude VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE steps (
     id SERIAL PRIMARY KEY,
     step_count INTEGER NOT NULL,
-    points_earned INTEGER DEFAULT 0,
     date TIMESTAMP NOT NULL,
     user_id INT REFERENCES users (id) ON DELETE CASCADE 
 );
@@ -33,7 +32,7 @@ CREATE TABLE checkins (
     id SERIAL PRIMARY KEY, 
     date TIMESTAMP NOT NULL,
     restaurant_id INTEGER REFERENCES restaurants (id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users (id) ON DELETE,
+    user_id INTEGER REFERENCES users (id) ON DELETE CASCADE,
     receipt_image VARCHAR(255)
 );
 
@@ -41,7 +40,8 @@ CREATE TABLE rewards (
     id SERIAL PRIMARY KEY,
     qr_code VARCHAR(255) NOT NULL,
     date_generated TIMESTAMP NOT NULL,
+    details VARCHAR(255) NOT NULL,
     expiration_date TIMESTAMP NOT NULL,
     user_id INT REFERENCES users (id) ON DELETE CASCADE,
-    restaurant_id INT REFERENCES restaurant (id) ON DELETE CASCADE,
+    restaurant_id INT REFERENCES restaurants (id) ON DELETE CASCADE
 );
