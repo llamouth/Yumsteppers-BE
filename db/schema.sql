@@ -30,9 +30,9 @@ CREATE TABLE steps (
 
 CREATE TABLE checkins ( 
     id SERIAL PRIMARY KEY, 
-    date TIMESTAMP NOT NULL,
-    restaurant_id INTEGER REFERENCES restaurants (id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users (id) ON DELETE CASCADE,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    restaurant_id INTEGER REFERENCES restaurants (id) ON DELETE CASCADE NOT NULL,
+    user_id INTEGER REFERENCES users (id) ON DELETE CASCADE NOT NULL,
     receipt_image VARCHAR(255)
 );
 

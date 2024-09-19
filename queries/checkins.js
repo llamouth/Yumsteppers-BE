@@ -19,14 +19,23 @@ const getSingleCheckin = async (id) => {
 }
 
 const createCheckin = async (checkin) => {
-    const { date, restaurant_id, user_id, receipt_image } = checkin
-    
+    const { restaurant_id, user_id, receipt_image } = checkin
+
     try {
-        const newCheckin = await db.one('INSERT INTO checkins (date, restaurant_id, user_id, receipt_image) VALUES($1, $2, $3, $4) RETURNING *', [ date, restaurant_id, user_id, receipt_image ]);
+        const newCheckin = await db.one('INSERT INTO checkins (restaurant_id, user_id, receipt_image) VALUES($1, $2, $3) RETURNING *', [ restaurant_id, user_id, receipt_image ]);
         return newCheckin
     } catch (error) {
         return error
     }
 }
 
-module.exports = { getAllCheckins, getSingleCheckin, createCheckin }
+const deleteCheckin = async (id) => {
+    try {
+        const removedCheckin = await db.one('DELETE FROM checkins WHERE id=$1 RETURNING *', id)
+        return removedCheckin
+    } catch (error) {
+        return error
+    }
+}
+
+module.exports = { getAllCheckins, getSingleCheckin, createCheckin, deleteCheckin }
