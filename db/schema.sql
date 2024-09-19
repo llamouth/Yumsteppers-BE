@@ -24,7 +24,7 @@ CREATE TABLE restaurants (
 CREATE TABLE steps (
     id SERIAL PRIMARY KEY,
     step_count INTEGER NOT NULL,
-    date TIMESTAMP NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     user_id INT REFERENCES users (id) ON DELETE CASCADE 
 );
 
@@ -38,10 +38,10 @@ CREATE TABLE checkins (
 
 CREATE TABLE rewards (
     id SERIAL PRIMARY KEY,
-    qr_code VARCHAR(255) NOT NULL,
-    date_generated TIMESTAMP NOT NULL,
+    qr_code TEXT,
+    date_generated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     details VARCHAR(255) NOT NULL,
     expiration_date TIMESTAMP NOT NULL,
     user_id INT REFERENCES users (id) ON DELETE CASCADE,
-    restaurant_id INT REFERENCES restaurants (id) ON DELETE CASCADE
+    restaurant_id INT REFERENCES restaurants (id) ON DELETE CASCADE NOT NULL
 );

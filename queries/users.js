@@ -26,7 +26,7 @@ const createUser = async (user) => {
         const salt = 10
         const hashedPassword = await bcrypt.hash(user.password_hash, salt)
         const newUser = await db.one(
-            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6,) RETURNING *", 
+            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
             [
                 user.username, 
                 user.email, 
@@ -38,6 +38,7 @@ const createUser = async (user) => {
         )
         return newUser
     } catch (error) {
+        console.log(error)
         return error  
     }
 }
@@ -78,14 +79,33 @@ const updateUser = async (id, newInfo) => {
             hashedPassword, 
             newInfo.latitude, 
             newInfo.longitude, 
-            newInfo.points_earned
+            newInfo.points_earned,
+            id
             ])
         }
-          return updatedInfo  
+        return updatedInfo  
 
-        }catch(error) {
-
-        }
+    }catch(error) {
+        return error
     }
+}
 
-module.exports = {getAllUsers,getOneUser,createUser,deleteUser, updateUser}
+const loginUser = async (user) => {
+    try {
+        const loggedInUser = await db.oneOrNone("SELECT * FROM users WHERE username=$1", user.username)
+        if(!loggedInUser){
+            return false
+        }
+
+        const passwordMatch = await bcrypt.compare(user.password_hash, loggedInUser.password_hash)
+
+        if(!passwordMatch){
+            return false
+        }
+        return loggedInUser
+    } catch (err) {
+        return err
+    }
+}
+
+module.exports = {getAllUsers,getOneUser,createUser,deleteUser, updateUser, loginUser}
