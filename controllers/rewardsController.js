@@ -1,5 +1,6 @@
 const express = require('express')
 const { getAllRewards, getSingleReward, createReward, deleteReward, updateReward } = require('../queries/rewards')
+const { rewardSchema } = require('../validations/rewardValidation')
 const rewards = express.Router()
 
 rewards.get('/', async (req, res) => {
@@ -22,6 +23,12 @@ rewards.get('/:id', async (req, res) => {
 })
 
  rewards.post('/', async (req, res) => {
+    const { error } = rewardSchema.validate(req.body)
+
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message })
+    }
+
     try {
         const newReward = await createReward(req.body)
         res.status(200).json(newReward)
@@ -41,8 +48,13 @@ rewards.get('/:id', async (req, res) => {
  })
 
  rewards.put('/:id', async (req, res) => {
+    const { id } = req.params
+    const { error } = rewardSchema.validate(req.body)
+
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message })
+    }
     try {
-        const { id } = req.params
         const updatedReward = await updateReward(id, req.body)
         res.status(200).json(updatedReward)
     } catch (error) {
