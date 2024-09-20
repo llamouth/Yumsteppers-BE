@@ -38,7 +38,7 @@ CREATE TABLE checkins (
 
 CREATE TABLE rewards (
     id SERIAL PRIMARY KEY,
-    qr_code TEXT,
+    qr_code TEXT NOT NULL,
     date_generated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     details VARCHAR(255) NOT NULL,
     expiration_date TIMESTAMP NOT NULL,
