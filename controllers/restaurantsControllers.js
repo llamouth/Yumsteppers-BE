@@ -7,6 +7,7 @@ const {
     updateRestaurantInformation,
     deleteRestaurant 
 } = require('../queries/restaurants');
+const { boroughsMap } = require('../utils/geoUtils')
 
 restaurants.get("/",  async (req, res) => {
     try {
@@ -28,11 +29,34 @@ restaurants.get('/:id', async (req, res) => {
 });
 
 restaurants.post("/", async (req, res) => {
-    const addNewRestaurant = await addRestaurant(req.body);
-    res.status(201).json({Message: "New restaurant has been added to the list of available restaurants", restaurant:addNewRestaurant });
+    const { name, latitude, longitude } = req.body;
+
+    if (!latitude || !longitude) {
+        return res.status(400).json({ error: "Latitude or Longitude is missing" });
+    }
+
+    const locationCheck = boroughsMap(latitude, longitude);
+
+    if (!locationCheck.valid) {
+        return res.status(400).json({ error: locationCheck.message });
+    }
+
+    const addNewRestaurant = await addRestaurant({ name, latitude, longitude });
+    res.status(201).json({
+        Message: "New restaurant has been added",
+        restaurant: addNewRestaurant
+    });
 });
 
+
 restaurants.put("/:id", async (req,res)=>{
+    const { lat, lng } = req.body
+    const locationCheck = boroughsMap(lat, lng)
+
+    if(!locationCheck.valid) {
+        return res.status(400).json({ error: locationCheck.message })
+    }
+
     const newInfo = req.body;
     const { id } = req.params;
     const updateRestaurantInfo = await updateRestaurantInformation({id, ...newInfo});

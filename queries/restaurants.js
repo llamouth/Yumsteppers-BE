@@ -1,4 +1,5 @@
 const db = require('../db/dbConfig');
+const { boroughsMap } = require('../utils/geoUtils')
 
 const getAllRestaurants =  async () => {
     try {
@@ -20,13 +21,20 @@ const getOneRestaurant = async (id) => {
 }; 
 
 const addRestaurant = async (newRestaurant) => {
+    const { name, latitude, longitude } = newRestaurant
+    const locationCheck = boroughsMap(latitude, longitude)
+
+    if(!locationCheck.valid) {
+        return { error: locationCheck.message }
+    }
+
     try {
         const addRestaurant = await db.one(
             "INSERT INTO restaurants (name, latitude, longitude) VALUES($1, $2, $3) RETURNING *",
             [
-                newRestaurant.name,
-                newRestaurant.latitude,
-                newRestaurant.longitude
+                name,
+                latitude,
+                longitude
             ])
         return addRestaurant;
     } catch (err) {

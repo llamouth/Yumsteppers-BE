@@ -1,4 +1,4 @@
-//Map for only Brooklyn, Queens, Manhattan, and the Bronx
+//Map for only Brooklyn, Queens, Manhattan, Staten Island, and the Bronx
 
 const BOROUGH_BOUNDS = {
     northeast: { lat: 40.917577, lng: -73.700272 },
@@ -7,9 +7,11 @@ const BOROUGH_BOUNDS = {
 
 const boroughsMap = (lat, lng) => {
     if (
-        lat <= BOROUGH_BOUNDS.northeast.lat && lat >= BOROUGH_BOUNDS.southwest.lng &&
+        lat <= BOROUGH_BOUNDS.northeast.lat && 
+        lat >= BOROUGH_BOUNDS.southwest.lat &&
         lng <= BOROUGH_BOUNDS.northeast.lng &&
         lng >= BOROUGH_BOUNDS.southwest.lng
+
     ) {
         return { valid: true }
         }

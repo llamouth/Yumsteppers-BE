@@ -2,15 +2,13 @@ const db = require('../db/dbConfig');
 const bcrypt = require('bcrypt')
 
 const getAllUsers = async () => {
-    try{
-        const allUsers = await db.any("SELECT * FROM users")
-        return allUsers
+    try {
+        const allUsers = await db.any('SELECT * FROM users');
+        return allUsers;
+    } catch (error) {
+        return error;
     }
-  catch(error){
-    return error
- }
-
-}
+};
 
 const getOneUser = async (id) => {
     try {

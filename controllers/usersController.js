@@ -12,12 +12,13 @@ users.use('/:user_id/steps', authenticateToken, stepsController);
 
 users.get('/', async (req, res) => {
     try {
-        const allUsers = await getAllUsers() 
-        res.status(200).json(allUsers)
+        const allUsers = await getAllUsers();
+        res.status(200).json(allUsers);
     } catch (error) {
-        res.status(500).json(error)
+        res.status(500).json({ error: 'Error retrieving users.' });
     }
-})
+});
+
 
 users.get('/:id', async (req, res)=>{
 

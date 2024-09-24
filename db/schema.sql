@@ -33,7 +33,9 @@ CREATE TABLE checkins (
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     restaurant_id INTEGER REFERENCES restaurants (id) ON DELETE CASCADE NOT NULL,
     user_id INTEGER REFERENCES users (id) ON DELETE CASCADE NOT NULL,
-    receipt_image VARCHAR(255)
+    receipt_image VARCHAR(255),
+    latitude VARCHAR(255),
+    longitude VARCHAR(255)
 );
 
 CREATE TABLE rewards (

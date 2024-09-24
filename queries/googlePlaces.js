@@ -37,7 +37,7 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     const destinationCheck = boroughsMap(destLat, destLng)
     const origin = `${originLat}, ${originLng}`
     const destination = `${destLat}, ${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=&mode=walking${destination}&key=${googleMapsAPIKey}`
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=walking&key=${googleMapsAPIKey}`
 
     if(!originCheck.valid || !destinationCheck.valid) {
         return { error: 'Origin or destination is outside of the allowed boroughs'}
@@ -47,11 +47,40 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     return await response.json()
 }
 
+const getDistance = async (originLat, originLng, destLat, destLng) => {
+    const originCheck = boroughsMap(originLat, originLng)
+    const destinationCheck = boroughsMap(destLat, destLng)
+    const origin = `${originLat}, ${originLng}`
+    const destination = `${destLat}, ${destLng}`
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=walking&key=${googleMapsAPIKey}`
+
+    if(!originCheck.valid || !destinationCheck.valid) {
+        return { error: 'Origin or destination is outside of the allowed boroughs'}
+    }
+
+    const response = await fetch(url)
+    return await response.json()
+}
+
+const validateCheckIn = async (userLat, userLng, placeLat, placeLng) => {
+    const userCheck = boroughsMap(userLat, userLng)
+    const placeCheck = boroughsMap(placeLat, placeLng)
+    const distanceResponse = await getDistance(userLat, userLng, placeLat, placeLng)
+    const distanceMeters = distanceResponse.rows[0].elements[0].distance.value
+
+    if(!userCheck.valid || placeCheck.valid) {
+        return { error: 'Too far to check in'}
+    }
+    return { valid: distanceMeters <= 100 }
+}
+
 
 
 module.exports = {
     getCurrentLocation,
     getNearbyPlaces, 
     getDirections,
+    getDistance,
+    validateCheckIn
 }
 

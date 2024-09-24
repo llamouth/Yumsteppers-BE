@@ -30,7 +30,7 @@ steps.delete('/:id', async (req,res) => {
     try {
         const deletedSteps = await deleteSteps(id)
         
-        res.json(200).json({message: 'Steps have been deleted'})
+        res.status(200).json({message: 'Steps have been deleted'})
     } catch (error) {
         res.status(500).json({error: 'Error steps could not be deleted'})
     }

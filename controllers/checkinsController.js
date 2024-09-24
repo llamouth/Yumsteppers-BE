@@ -1,6 +1,7 @@
 const express = require('express')
 const checkins = express.Router()
 const { getAllCheckins, getSingleCheckin, createCheckin, deleteCheckin } = require('../queries/checkins')
+const { boroughsMap } = require('../utils/geoUtils')
 
 checkins.get('/', async ( req, res ) => {
     try {
@@ -22,6 +23,14 @@ checkins.get('/:id', async (req, res) => {
 })
 
 checkins.post('/', async (req, res) => {
+    const { restaurantLat, restaurantLng, userLat, userLng } = req.body
+    const restaurantValid = boroughsMap(restaurantLat, restaurantLng)
+    const userValid = boroughsMap(userLat, userLng)
+
+    if(!restaurantValid.valid || !userValid.valid) {
+        return res.status(400).json({ error: 'User or restaurant are outside the allowed boroughs'})
+    }
+
     try {
         const newCheckIn = await createCheckin(req.body)
         console.log(newCheckIn)
