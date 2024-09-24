@@ -66,8 +66,7 @@ users.post("/login", async (req, res) => {
             res.status(401).json({ error: "Invalid username or password" })
             return 
         }
-
-        console.log()
+        
         const token = jwt.sign({ userId: userLoggedIn.user_id, username: userLoggedIn.username }, process.env.SECRET);
 
         const user = userLoggedIn
