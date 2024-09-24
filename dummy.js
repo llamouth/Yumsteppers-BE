@@ -9,5 +9,3 @@ const qr = QRCode.toString(JSON.stringify(reward), (err, url) => {
     if(err) throw err
     return url
 })
-
-console.log(qr)
