@@ -33,7 +33,7 @@ users.get('/:id', async (req, res)=>{
 users.post("/", async (req ,res) => {
     const newUser = await createUser(req.body);
 
-    const token = jwt.sign({ userId: newUser.id, username: newUser.username }, process.env.SECRET);
+    const token = jwt.sign({ userId: newUser.userId?.id, username: newUser.userId?.username }, process.env.SECRET);
 
     res.status(201).json({newUser, token});
 })
