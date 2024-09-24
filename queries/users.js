@@ -1,4 +1,4 @@
-const db = require('../db/dbConfig');
+const { db } = require('../db/dbConfig');
 const bcrypt = require('bcrypt')
 
 const getAllUsers = async () => {
@@ -7,6 +7,7 @@ const getAllUsers = async () => {
         return allUsers
     }
   catch(error){
+    console.log(error)
     return error
  }
 

@@ -1,4 +1,4 @@
-const db = require('../db/dbConfig')
+const {db} = require('../db/dbConfig')
 
 const getAllCheckins = async () => {
     try {

@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid')
-const db = require('../db/dbConfig')
+const {db} = require('../db/dbConfig')
 const QRCode = require('qrcode')
 
 const getAllRewards = async () => {
