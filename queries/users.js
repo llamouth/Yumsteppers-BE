@@ -26,6 +26,7 @@ const createUser = async (user) => {
     try {
         const salt = 10
         const hashedPassword = await bcrypt.hash(user.password_hash, salt)
+        
         const newUser = await db.one(
             "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
             [
