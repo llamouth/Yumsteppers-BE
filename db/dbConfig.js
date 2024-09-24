@@ -10,5 +10,6 @@ const cn = {
 }
 
 const db = pgp(cn)
+const googleMapsAPIKey = process.env.GOOGLE_MAPS_API_KEY
 
-module.exports = db
+module.exports = { db, googleMapsAPIKey }
