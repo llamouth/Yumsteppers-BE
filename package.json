@@ -3,7 +3,8 @@
     "start": "nodemon server.js",
     "db:init": "psql -U postgres -f db/schema.sql",
     "db:seed": "psql -U postgres -f db/seed.sql",
-    "db:trig": "psql -U postgres -f db/triggers.sql"
+    "db:trig": "psql -U postgres -f db/triggers.sql",
+    "test": "jest"
   },
   "name": "back-end",
   "version": "1.0.0",
@@ -23,5 +24,8 @@
     "pg-promise": "^11.9.1",
     "qrcode": "^1.5.4",
     "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
