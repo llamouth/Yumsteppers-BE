@@ -11,7 +11,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     latitude VARCHAR(255),
     longitude VARCHAR(255),
-    points_earned INT
+    points_earned INT DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE restaurants (

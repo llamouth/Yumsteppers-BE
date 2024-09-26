@@ -33,7 +33,10 @@ users.get('/:id', async (req, res)=>{
 
 users.post("/", async (req ,res) => {
     const newUser = await createUser(req.body);
-    res.status(201).json(newUser)
+
+    const token = jwt.sign({ userId: newUser.userId?.id, username: newUser.userId?.username }, process.env.SECRET);
+
+    res.status(201).json({newUser, token});
 })
 
 users.delete("/:id", authenticateToken, async (req, res) => {
@@ -67,8 +70,7 @@ users.post("/login", async (req, res) => {
             res.status(401).json({ error: "Invalid username or password" })
             return 
         }
-
-        console.log()
+        
         const token = jwt.sign({ userId: userLoggedIn.user_id, username: userLoggedIn.username }, process.env.SECRET);
 
         const user = userLoggedIn

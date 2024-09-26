@@ -1,4 +1,4 @@
-const db = require('../db/dbConfig');
+const { db } = require('../db/dbConfig');
 const bcrypt = require('bcrypt')
 
 const getAllUsers = async () => {
@@ -8,7 +8,16 @@ const getAllUsers = async () => {
     } catch (error) {
         return error;
     }
+<<<<<<< HEAD
 };
+=======
+  catch(error){
+    console.log(error)
+    return error
+ }
+
+}
+>>>>>>> d3b5a9706a0656bcf3a39c9cd197d857facc4100
 
 const getOneUser = async (id) => {
     try {
@@ -23,6 +32,7 @@ const createUser = async (user) => {
     try {
         const salt = 10
         const hashedPassword = await bcrypt.hash(user.password_hash, salt)
+        
         const newUser = await db.one(
             "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
             [

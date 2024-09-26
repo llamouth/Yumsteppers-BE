@@ -1,6 +1,7 @@
 const db = require('../db/dbConfig')
 const { boroughsMap } = require('../utils/geoUtils')
 
+
 const getAllCheckins = async () => {
     try {
         const allCheckins = await db.any('SELECT * FROM checkins')
