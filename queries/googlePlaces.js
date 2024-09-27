@@ -1,16 +1,18 @@
 const { googleMapsAPIKey } = require ('../db/dbConfig')
 const { boroughsMap } = require('../utils/geoUtils')
 
-
-
 const getCurrentLocation = async () => {
     const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${googleMapsAPIKey}`
     const response = await fetch(url, { 
         method: 'POST' 
     })
-    const data = await response.json()
 
-    console.log('Location data:', data);
+    if(!response.ok) {
+        const error = await response.json()
+        return  { error: error.message || 'Failed to get current location'}
+    }
+    
+    const data = await response.json()
 
     const { lat, lng } = data.location
     const boundaryCheck = boroughsMap(lat, lng)
@@ -23,12 +25,16 @@ const getCurrentLocation = async () => {
 
 const getNearbyPlaces = async (lat, lng) => {
     const boundaryCheck = boroughsMap(lat, lng)
-    const types = ['restaurant', 'cafe', 'bar']
+    const types = ['restaurant', 'cafe', 'bar'].join('|')
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1500&type=${types}&key=${googleMapsAPIKey}`
     if(!boundaryCheck.valid) {
         return { error: boundaryCheck.message }
     }
     const response = await fetch(url)
+    if (!response.ok) {
+        const error = await response.json();
+        return { error: error.error_message || 'Failed to fetch nearby places' };
+    }
     return await response.json()
 }
 
@@ -44,6 +50,11 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     }
 
     const response = await fetch(url)
+    if(!response.ok) {
+        const error = await response.json()
+        return { error: error.message || 'Failed to get directions'}
+    }
+
     return await response.json()
 }
 
@@ -59,6 +70,11 @@ const getDistance = async (originLat, originLng, destLat, destLng) => {
     }
 
     const response = await fetch(url)
+    if(!response.ok) {
+        const error = await  response.json()
+        return { error: error.message || 'Failed to get distance'}
+    }
+
     return await response.json()
 }
 
@@ -68,7 +84,7 @@ const validateCheckIn = async (userLat, userLng, placeLat, placeLng) => {
     const distanceResponse = await getDistance(userLat, userLng, placeLat, placeLng)
     const distanceMeters = distanceResponse.rows[0].elements[0].distance.value
 
-    if(!userCheck.valid || placeCheck.valid) {
+    if(!userCheck.valid || !placeCheck.valid) {
         return { error: 'Too far to check in'}
     }
     return { valid: distanceMeters <= 100 }

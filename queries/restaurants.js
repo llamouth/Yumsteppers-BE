@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-const db = require('../db/dbConfig');
-const { boroughsMap } = require('../utils/geoUtils')
-=======
 const {db} = require('../db/dbConfig');
->>>>>>> d3b5a9706a0656bcf3a39c9cd197d857facc4100
 
 const getAllRestaurants =  async () => {
     try {

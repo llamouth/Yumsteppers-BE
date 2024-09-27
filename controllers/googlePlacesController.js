@@ -18,6 +18,7 @@ googlePlaces.post('/location', async (req,res) => {
 googlePlaces.get('/nearby', async (req, res) => {
     try {
         const { lat, lng } = req.query
+        console.log('Latitude:', lat, 'Longitude:', lng);  // Add logging here
         const places = await getNearbyPlaces(lat, lng)
         if(places.error) {
             return res.status(400).json({ error: places.error })

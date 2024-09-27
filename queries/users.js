@@ -6,18 +6,11 @@ const getAllUsers = async () => {
         const allUsers = await db.any('SELECT * FROM users');
         return allUsers;
     } catch (error) {
-        return error;
+        console.log(error); 
+        return error; 
     }
-<<<<<<< HEAD
 };
-=======
-  catch(error){
-    console.log(error)
-    return error
- }
 
-}
->>>>>>> d3b5a9706a0656bcf3a39c9cd197d857facc4100
 
 const getOneUser = async (id) => {
     try {
