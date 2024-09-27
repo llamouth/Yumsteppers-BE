@@ -5,7 +5,7 @@ const getAllRestaurants =  async () => {
         const allRestaurants = await db.any('SELECT * FROM restaurants')
         return allRestaurants
     } catch (error) {
-        return error
+        throw new Error("Unable to fetch restaurants");
     }
 }
 
