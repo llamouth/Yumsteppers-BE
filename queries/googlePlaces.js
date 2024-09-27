@@ -4,6 +4,7 @@ const { boroughsMap } = require('../utils/geoUtils')
 
 
 const getCurrentLocation = async () => {
+    console.log(googleMapsAPIKey)
     const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${googleMapsAPIKey}`
     const response = await fetch(url, { 
         method: 'POST' 
@@ -12,6 +13,7 @@ const getCurrentLocation = async () => {
 
     console.log('Location data:', data);
 
+    
     const { lat, lng } = data.location
     const boundaryCheck = boroughsMap(lat, lng)
 
