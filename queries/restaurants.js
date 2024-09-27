@@ -11,11 +11,11 @@ const getAllRestaurants =  async () => {
 
 const getOneRestaurant = async (id) => {
     try {
-        const oneRestaurant = await db.one("SELECT * FROM restaurants WHERE id=$1", id);
+        const oneRestaurant = await db.one("SELECT * FROM restaurants WHERE id=$1", [id]);
         return oneRestaurant;
 
     } catch (error) {
-        return error
+        throw new Error("Unable to fetch specified restaurant from database");
     }
 }; 
 
