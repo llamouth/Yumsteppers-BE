@@ -22,11 +22,13 @@ const getOneRestaurant = async (id) => {
 const addRestaurant = async (newRestaurant) => {
     try {
         const addRestaurant = await db.one(
-            "INSERT INTO restaurants (name, latitude, longitude) VALUES($1, $2, $3) RETURNING *",
+            "INSERT INTO restaurants (name, latitude, longitude, description, cuisine_type) VALUES($1, $2, $3, $4, $5) RETURNING *",
             [
                 newRestaurant.name,
                 newRestaurant.latitude,
-                newRestaurant.longitude
+                newRestaurant.longitude,
+                newRestaurant.description,
+                newRestaurant.cuisine_type
             ])
         return addRestaurant;
     } catch (err) {
@@ -37,10 +39,12 @@ const addRestaurant = async (newRestaurant) => {
 const updateRestaurantInformation = async (updateRestaurant) => {
     try {
         const updateRestaurantInfo = await db.one(
-            "UPDATE restaurants SET name=$1, latitude=$2, longitude=$3 WHERE id=$4 RETURNING *",
+            "UPDATE restaurants SET name=$1, latitude=$2, longitude=$3, description=$4, cuisine_type=$5 WHERE id=$6 RETURNING *",
             [
                 updateRestaurant.name,
                 updateRestaurant.latitude,
+                updateRestaurant.description,
+                updateRestaurant.cuisine_type,
                 updateRestaurant.longitude,
                 updateRestaurant.id
             ]
