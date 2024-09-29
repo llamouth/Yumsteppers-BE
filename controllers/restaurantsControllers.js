@@ -39,7 +39,7 @@ restaurants.put("/:id", async (req,res)=>{
     if(updateRestaurantInfo.id){
         res.status(200).json({restaurant:updateRestaurantInfo });
     }else{
-        res.status(404).json({ error: `${updateRestaurantInfo}` });
+        res.status(404).json({ error: `Restaurant ID:${id} Can Not Be Found` });
     }
 });
 

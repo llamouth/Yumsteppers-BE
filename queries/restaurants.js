@@ -43,9 +43,9 @@ const updateRestaurantInformation = async (updateRestaurant) => {
             [
                 updateRestaurant.name,
                 updateRestaurant.latitude,
+                updateRestaurant.longitude,
                 updateRestaurant.description,
                 updateRestaurant.cuisine_type,
-                updateRestaurant.longitude,
                 updateRestaurant.id
             ]
         );
