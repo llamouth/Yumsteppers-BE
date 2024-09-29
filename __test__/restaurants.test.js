@@ -5,12 +5,12 @@ const {
     updateRestaurantInformation, 
     deleteRestaurant } = require("../queries/restaurants");
 
-const restaurant = {
-    id: 63,
-    name: "test restaurant",
-    latitude: 52.00000,
-    longitude: 49.0000,
-};
+// const mockRestaurant = {
+//     id: 67,
+//     name: "test restaurant",
+//     latitude: '52.465658383',
+//     longitude: '39.928273747',
+// };
 
 describe("Restaurants", () => {
 
@@ -36,7 +36,7 @@ describe("Restaurants", () => {
     });
 
     it("Should provide an object with details of one specified restaurant", async () => {
-        const result = await getOneRestaurant(restaurant.id);
+        const result = await getOneRestaurant(mockRestaurant.id);
 
         expect(typeof result).toBe("object");
         
@@ -48,57 +48,57 @@ describe("Restaurants", () => {
 
     it("Should return an error when unable to fetch a specific restaurant", async () => {
         try {
-            await getOneRestaurant(restaurant.id);
+            await getOneRestaurant(mockRestaurant.id);
         } catch (error) {
             expect(error.message).toBe("Unable to fetch specified restaurant from database");
         }
     });
 
     it("Should add a restaurant to the database", async () => {
-        const result = await addRestaurant(restaurant);
+        const result = await addRestaurant(mockRestaurant);
 
-        expect(typeof restaurant).toBe("object");
-        expect(restaurant).toHaveProperty("name", expect.any(String));
-        expect(restaurant).toHaveProperty("latitude", expect.any(Number));
-        expect(restaurant).toHaveProperty("longitude", expect.any(Number));
+        expect(typeof mockRestaurant).toBe("object");
+        expect(mockRestaurant).toHaveProperty("name", expect.any(String));
+        expect(mockRestaurant).toHaveProperty("latitude", expect.any(String));
+        expect(mockRestaurant).toHaveProperty("longitude", expect.any(String));
     });
 
     it("Should return an error when unable to add a restaurant", async () => {
         try {
-            await addRestaurant(restaurant);
+            await addRestaurant(mockRestaurant);
         } catch (error) {
             expect(error.message).toBe("Unable to add restaurant to database");
         }
     });
 
     it("Should update restaurant information in the database", async () => {
-        const result = await updateRestaurantInformation(restaurant);
+        const result = await updateRestaurantInformation(mockRestaurant.id);
 
-        expect(typeof restaurant).toBe("object");
-        expect(restaurant).toHaveProperty("name", expect.any(String));
-        expect(restaurant).toHaveProperty("latitude", expect.any(Number));
-        expect(restaurant).toHaveProperty("longitude", expect.any(Number));
+        expect(typeof mockRestaurant).toBe("object");
+        expect(mockRestaurant).toHaveProperty("name", expect.any(String));
+        expect(mockRestaurant).toHaveProperty("latitude", expect.any(String));
+        expect(mockRestaurant).toHaveProperty("longitude", expect.any(String));
     });
 
     it("Should return an error when unable to update restaurant information", async () => {
         try {
-            await updateRestaurantInformation(restaurant);
+            await updateRestaurantInformation(mockRestaurant);
         } catch (error) {
             expect(error.message).toBe("Unable to update restaurant information within the database");
         }
     });
 
     it("Should delete restaurant information in the database", async () => {
-        const result = await deleteRestaurant(restaurant.id);
+        const result = await deleteRestaurant(mockRestaurant.id);
 
-        expect(typeof restaurant.id).toBe("number");
+        expect(typeof mockRestaurant.id).toBe("number");
         // expect(typeof result).toBe("object");
     
     });
 
     it("Should return an error when unable to delete restaurant information", async () => {
         try {
-            await deleteRestaurant(restaurant.id);
+            await deleteRestaurant(mockRestaurant.id);
             
         } catch (error) {
             expect(error.message).toBe("Unable to delete specified restaurant from database");
