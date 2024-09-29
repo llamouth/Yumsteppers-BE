@@ -1,17 +1,22 @@
-const { getAllRestaurants, getOneRestaurant } = require("../queries/restaurants");
+const { 
+    getAllRestaurants, 
+    getOneRestaurant, 
+    addRestaurant, 
+    updateRestaurantInformation, 
+    deleteRestaurant } = require("../queries/restaurants");
 
 const restaurant = {
-    id: 1,
+    id: 63,
     name: "test restaurant",
     latitude: 52.00000,
     longitude: 49.0000,
-}
+};
 
 describe("Restaurants", () => {
-    it("Should provide an array of objects with restaurant information that is within the database", async () => {
 
+    it("Should provide an array of objects with restaurant information from the database", async () => {
         const result = await getAllRestaurants();
-        // console.log("Result:", result);
+
         expect(Array.isArray(result)).toBe(true);
         result.forEach(restaurant => {
             expect(typeof restaurant).toBe("object");
@@ -21,8 +26,8 @@ describe("Restaurants", () => {
             expect(restaurant).toHaveProperty("longitude");
         });
     });
-    
-    it("Should throw an error message if unable to fetch ANY restaurants", async () => {
+
+    it("Should return an error when unable to fetch restaurants", async () => {
         try {
             await getAllRestaurants();
         } catch (error) {
@@ -30,25 +35,18 @@ describe("Restaurants", () => {
         }
     });
 
-    it("Should provide an object with details of one specified restaurant from the database", async () => {
-       
-        
+    it("Should provide an object with details of one specified restaurant", async () => {
         const result = await getOneRestaurant(restaurant.id);
-        // console.log("Result:", result);
-        // expect(typeof num).toBe("number")
-        // result.id
 
         expect(typeof result).toBe("object");
-        expect(typeof result.id).toBe("number");
-
-
+        
         expect(result).toHaveProperty("id");
         expect(result).toHaveProperty("name");
         expect(result).toHaveProperty("latitude");
         expect(result).toHaveProperty("longitude");
     });
 
-    it("Should throw an error message if unable to fetch specified restaurant within the database", async () => {
+    it("Should return an error when unable to fetch a specific restaurant", async () => {
         try {
             await getOneRestaurant(restaurant.id);
         } catch (error) {
@@ -56,4 +54,54 @@ describe("Restaurants", () => {
         }
     });
 
+    it("Should add a restaurant to the database", async () => {
+        const result = await addRestaurant(restaurant);
+
+        expect(typeof restaurant).toBe("object");
+        expect(restaurant).toHaveProperty("name", expect.any(String));
+        expect(restaurant).toHaveProperty("latitude", expect.any(Number));
+        expect(restaurant).toHaveProperty("longitude", expect.any(Number));
+    });
+
+    it("Should return an error when unable to add a restaurant", async () => {
+        try {
+            await addRestaurant(restaurant);
+        } catch (error) {
+            expect(error.message).toBe("Unable to add restaurant to database");
+        }
+    });
+
+    it("Should update restaurant information in the database", async () => {
+        const result = await updateRestaurantInformation(restaurant);
+
+        expect(typeof restaurant).toBe("object");
+        expect(restaurant).toHaveProperty("name", expect.any(String));
+        expect(restaurant).toHaveProperty("latitude", expect.any(Number));
+        expect(restaurant).toHaveProperty("longitude", expect.any(Number));
+    });
+
+    it("Should return an error when unable to update restaurant information", async () => {
+        try {
+            await updateRestaurantInformation(restaurant);
+        } catch (error) {
+            expect(error.message).toBe("Unable to update restaurant information within the database");
+        }
+    });
+
+    it("Should delete restaurant information in the database", async () => {
+        const result = await deleteRestaurant(restaurant.id);
+
+        expect(typeof restaurant.id).toBe("number");
+        // expect(typeof result).toBe("object");
+    
+    });
+
+    it("Should return an error when unable to delete restaurant information", async () => {
+        try {
+            await deleteRestaurant(restaurant.id);
+            
+        } catch (error) {
+            expect(error.message).toBe("Unable to delete specified restaurant from database");
+        }
+    });
 });

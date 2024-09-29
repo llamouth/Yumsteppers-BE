@@ -5,7 +5,7 @@ const getAllRestaurants =  async () => {
         const allRestaurants = await db.any('SELECT * FROM restaurants')
         return allRestaurants
     } catch (error) {
-        throw new Error("Unable to fetch restaurants");
+        return error;
     }
 }
 
@@ -15,7 +15,7 @@ const getOneRestaurant = async (id) => {
         return oneRestaurant;
 
     } catch (error) {
-        throw new Error("Unable to fetch specified restaurant from database");
+        return error;
     }
 }; 
 
@@ -29,8 +29,8 @@ const addRestaurant = async (newRestaurant) => {
                 newRestaurant.longitude
             ])
         return addRestaurant;
-    } catch (err) {
-        return err;
+    } catch (error) {
+        return error;
     }
 }
 
@@ -46,8 +46,8 @@ const updateRestaurantInformation = async (updateRestaurant) => {
             ]
         );
         return updateRestaurantInfo;
-    } catch (err) {
-        return err;
+    } catch (error) {
+        return error;
     }
 };
 

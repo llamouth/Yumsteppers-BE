@@ -29,8 +29,10 @@ restaurants.get('/:id', async (req, res) => {
 
 restaurants.post("/", async (req, res) => {
     const addNewRestaurant = await addRestaurant(req.body);
+    console.log(req.body)
     res.status(201).json({Message: "New restaurant has been added to the list of available restaurants", restaurant:addNewRestaurant });
 });
+
 
 restaurants.put("/:id", async (req,res)=>{
     const newInfo = req.body;
