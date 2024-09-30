@@ -39,13 +39,19 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     const destinationCheck = boroughsMap(destLat, destLng)
     const origin = `${originLat}, ${originLng}`
     const destination = `${destLat}, ${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=&mode=walking${destination}&key=${googleMapsAPIKey}`
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=walking&key=${googleMapsAPIKey}`
+
+
+    // console.log(originCheck)
+    console.log(destLat, destLng)
 
     if(!originCheck.valid || !destinationCheck.valid) {
         return { error: 'Origin or destination is outside of the allowed boroughs'}
     }
 
     const response = await fetch(url)
+//    .then (res => res.json())
+//    .then( res => console.log(res))
     return await response.json()
 }
 
