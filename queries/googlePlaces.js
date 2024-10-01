@@ -4,14 +4,12 @@ const { boroughsMap } = require('../utils/geoUtils')
 
 
 const getCurrentLocation = async () => {
-    console.log(googleMapsAPIKey)
     const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${googleMapsAPIKey}`
     const response = await fetch(url, { 
         method: 'POST' 
     })
     const data = await response.json()
 
-    console.log('Location data:', data);
 
     
     const { lat, lng } = data.location
@@ -42,16 +40,12 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=walking&key=${googleMapsAPIKey}`
 
 
-    // console.log(originCheck)
-    console.log(destLat, destLng)
 
     if(!originCheck.valid || !destinationCheck.valid) {
         return { error: 'Origin or destination is outside of the allowed boroughs'}
     }
 
     const response = await fetch(url)
-//    .then (res => res.json())
-//    .then( res => console.log(res))
     return await response.json()
 }
 

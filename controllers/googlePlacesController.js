@@ -33,7 +33,6 @@ googlePlaces.get('/direction', async (req, res) => {
     try {
         const {originLat, originLng, destLat, destLng } = req.query
         const directions = await getDirections(originLat, originLng, destLat, destLng)
-        console.log(directions)
         if(directions.error) {
             res.status(400).json({ error: directions.error })
         }
