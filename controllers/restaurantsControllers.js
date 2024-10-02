@@ -13,7 +13,7 @@ restaurants.get("/",  async (req, res) => {
         const allRestaurants = await getAllRestaurants()
         res.status(200).json(allRestaurants);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({message: "Database error, no restaurants were retrieved from the database."});
     }
 });
 
@@ -22,15 +22,22 @@ restaurants.get('/:id', async (req, res) => {
     const oneRestaurant = await getOneRestaurant(id);
     if (oneRestaurant) {
         res.status(200).json(oneRestaurant);
-    } else {
+    } else if(oneRestaurant.name === "QueryResultError"){
         res.status(500).json({ error: `This id doesnt exist for a restauarant `});
     }
 });
 
 restaurants.post("/", async (req, res) => {
-    const addNewRestaurant = await addRestaurant(req.body);
-    console.log(req.body)
-    res.status(201).json({Message: "New restaurant has been added to the list of available restaurants", restaurant:addNewRestaurant });
+    try {
+        const addNewRestaurant = await addRestaurant(req.body);
+        res.status(201).json({
+            Message: "New restaurant has been added to the list of available restaurants",
+            restaurant: addNewRestaurant
+        });
+    } catch (error) {
+        console.error("Error adding restaurant:", error);
+        res.status(500).json({ Message: "Failed to add restaurant", error: error.message });
+    }
 });
 
 

@@ -1,24 +1,34 @@
-const { 
-    getAllRestaurants, 
-    getOneRestaurant, 
-    addRestaurant, 
-    updateRestaurantInformation, 
+const request = require('supertest');
+const express = require('express');
+const app = require("../app");
+const {
+    getAllRestaurants,
+    getOneRestaurant,
+    addRestaurant,
+    updateRestaurantInformation,
     deleteRestaurant } = require("../queries/restaurants");
 
-// const mockRestaurant = {
-//     id: 67,
-//     name: "test restaurant",
-//     latitude: '52.465658383',
-//     longitude: '39.928273747',
-// };
+jest.mock('../queries/restaurants');
+
+
+const mockRestaurant = {
+    id: 3,
+    name: "test restaurant",
+    latitude: '52.465658383',
+    longitude: '39.928273747',
+};
 
 describe("Restaurants", () => {
-
     it("Should provide an array of objects with restaurant information from the database", async () => {
-        const result = await getAllRestaurants();
 
-        expect(Array.isArray(result)).toBe(true);
-        result.forEach(restaurant => {
+        getAllRestaurants.mockResolvedValue([mockRestaurant]);
+
+        const response = await request(app).get('/restaurants');
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([mockRestaurant]);
+
+        response.body.forEach(restaurant => {
             expect(typeof restaurant).toBe("object");
             expect(restaurant).toHaveProperty("id");
             expect(restaurant).toHaveProperty("name");
@@ -27,81 +37,154 @@ describe("Restaurants", () => {
         });
     });
 
-    it("Should return an error when unable to fetch restaurants", async () => {
-        try {
-            await getAllRestaurants();
-        } catch (error) {
-            expect(error.message).toBe("Unable to fetch restaurants from database");
-        }
+    it("Should return a 500 error when there is a server error", async () => {
+        getAllRestaurants.mockRejectedValue(new Error("Server error"));
+
+        const response = await request(app).get('/restaurants');
+
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty("message", "Database error, no restaurants were retrieved from the database.");
     });
 
     it("Should provide an object with details of one specified restaurant", async () => {
-        const result = await getOneRestaurant(mockRestaurant.id);
+        getOneRestaurant.mockResolvedValue(mockRestaurant);
 
-        expect(typeof result).toBe("object");
-        
-        expect(result).toHaveProperty("id");
-        expect(result).toHaveProperty("name");
-        expect(result).toHaveProperty("latitude");
-        expect(result).toHaveProperty("longitude");
+        const response = await request(app).get("/restaurants/5");
+
+        expect(response.statusCode).toBe(200);
+        expect(typeof response.body).toBe("object");
+
+
+        expect(response.body).toHaveProperty("id");
+        expect(response.body).toHaveProperty("name");
+        expect(response.body).toHaveProperty("latitude");
+        expect(response.body).toHaveProperty("longitude");
     });
 
-    it("Should return an error when unable to fetch a specific restaurant", async () => {
-        try {
-            await getOneRestaurant(mockRestaurant.id);
-        } catch (error) {
-            expect(error.message).toBe("Unable to fetch specified restaurant from database");
-        }
+    // it('Should return 500 when the restaurant is not found', async () => {
+    //     const error = {
+    //         name: "QueryResultError"
+    //     };
+
+    //     getOneRestaurant.mockResolvedValue(error.name);
+
+    //     const response = await request(app).get('/restaurants/0');
+    //     console.log(response)
+
+    //     expect(response.status).toBe(500);
+    //     expect(response.body).toHaveProperty("message", "This id doesnt exist for a restauarant");
+    // });
+
+    it("Should add a restaurant to the database and return a 201 status", async () => {
+
+        const newRestaurant = {
+            name: "new restaurant",
+            latitude: '51.465658383',
+            longitude: '38.928273747',
+        };
+
+        addRestaurant.mockResolvedValue(newRestaurant);
+
+        const response = await request(app)
+            .post('/restaurants')
+            .send(newRestaurant)
+            .expect(201);
+
+        expect(response.body).toEqual({
+            Message: "New restaurant has been added to the list of available restaurants",
+            restaurant: newRestaurant,
+        });
+
+        expect(addRestaurant).toHaveBeenCalledWith(newRestaurant);
+
+
+        expect(typeof newRestaurant).toBe("object");
+        expect(newRestaurant).toHaveProperty("name", expect.any(String));
+        expect(newRestaurant).toHaveProperty("latitude", expect.any(String));
+        expect(newRestaurant).toHaveProperty("longitude", expect.any(String));
     });
 
-    it("Should add a restaurant to the database", async () => {
-        const result = await addRestaurant(mockRestaurant);
+    it('should return 500 and an error message if adding the restaurant fails', async () => {
+        const errorMessage = 'Failed to add restaurant';
 
-        expect(typeof mockRestaurant).toBe("object");
-        expect(mockRestaurant).toHaveProperty("name", expect.any(String));
-        expect(mockRestaurant).toHaveProperty("latitude", expect.any(String));
-        expect(mockRestaurant).toHaveProperty("longitude", expect.any(String));
-    });
+        addRestaurant.mockRejectedValue(new Error(errorMessage));
 
-    it("Should return an error when unable to add a restaurant", async () => {
-        try {
-            await addRestaurant(mockRestaurant);
-        } catch (error) {
-            expect(error.message).toBe("Unable to add restaurant to database");
-        }
+        const response = await request(app)
+            .post('/restaurants')
+            .send({ name: 'Test Restaurant' })
+            .expect(500);
+
+        expect(response.body).toEqual({
+            Message: 'Failed to add restaurant',
+            error: errorMessage
+        });
     });
 
     it("Should update restaurant information in the database", async () => {
-        const result = await updateRestaurantInformation(mockRestaurant.id);
+        const mockUpdatedRestaurant = {
+            id: 3,
+            name: 'Updated Restaurant',
+            latitude: "59.730610",
+            longitude: "-53.935242"
+        };
 
-        expect(typeof mockRestaurant).toBe("object");
-        expect(mockRestaurant).toHaveProperty("name", expect.any(String));
-        expect(mockRestaurant).toHaveProperty("latitude", expect.any(String));
-        expect(mockRestaurant).toHaveProperty("longitude", expect.any(String));
+        updateRestaurantInformation.mockResolvedValue(mockUpdatedRestaurant);
+
+        const res = await request(app)
+            .put('/restaurants/3')
+            .send({
+                name: 'Updated Restaurant',
+                latitude: "59.730610",
+                longitude: "-53.935242"
+            });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('Message', 'Restaurant database has been successfully updated');
+        expect(res.body.restaurant).toEqual(mockUpdatedRestaurant);
+
+        expect(typeof mockUpdatedRestaurant).toBe("object");
+        expect(mockUpdatedRestaurant).toHaveProperty("name", expect.any(String));
+        expect(mockUpdatedRestaurant).toHaveProperty("latitude", expect.any(String));
+        expect(mockUpdatedRestaurant).toHaveProperty("longitude", expect.any(String));
     });
 
-    it("Should return an error when unable to update restaurant information", async () => {
-        try {
-            await updateRestaurantInformation(mockRestaurant);
-        } catch (error) {
-            expect(error.message).toBe("Unable to update restaurant information within the database");
-        }
+    it('should return a 404 if restaurant ID is not found', async () => {
+        updateRestaurantInformation.mockResolvedValue({});
+
+        const res = await request(app)
+            .put('/restaurants/999')
+            .send({
+                name: 'Nonexistent Restaurant',
+                address: '123 Nowhere St.',
+                cuisine: 'Unknown',
+            });
+
+        expect(res.status).toBe(404);
+        expect(res.body).toHaveProperty('error', 'Restaurant ID:999 Can Not Be Found');
     });
 
-    it("Should delete restaurant information in the database", async () => {
-        const result = await deleteRestaurant(mockRestaurant.id);
+    it("should delete a restaurant and return a success message when restaurant exists", async () => {
 
-        expect(typeof mockRestaurant.id).toBe("number");
-        // expect(typeof result).toBe("object");
-    
+        deleteRestaurant.mockResolvedValue(mockRestaurant);
+
+        const response = await request(app).delete(`/restaurants/${mockRestaurant.id}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            message: `The restaurant called "${mockRestaurant.name}" has been removed.`,
+        });
     });
 
-    it("Should return an error when unable to delete restaurant information", async () => {
-        try {
-            await deleteRestaurant(mockRestaurant.id);
-            
-        } catch (error) {
-            expect(error.message).toBe("Unable to delete specified restaurant from database");
-        }
+    it("should return 404 error when restaurant does not exist", async () => {
+        const restaurantId = "999";
+
+        deleteRestaurant.mockResolvedValue({});
+
+        const response = await request(app).delete(`/restaurants/${restaurantId}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: `Restaurant ID:${restaurantId} Can Not Be Found`,
+        });
     });
 });
