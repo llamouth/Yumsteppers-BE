@@ -4,6 +4,7 @@
     "db:init": "psql -U postgres -f db/schema.sql",
     "db:seed": "psql -U postgres -f db/seed.sql",
     "db:trig": "psql -U postgres -f db/triggers.sql",
+    "db:alt": "psql -U postgres -f db/alteringTables.sql",
     "test": "jest"
   },
   "name": "back-end",

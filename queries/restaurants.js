@@ -32,6 +32,7 @@ const addRestaurant = async (newRestaurant) => {
             ])
         return addRestaurant;
     } catch (err) {
+        console.log(err);
         return err;
     }
 }
