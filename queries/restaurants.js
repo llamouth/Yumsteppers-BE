@@ -1,63 +1,53 @@
-const {db} = require('../db/dbConfig');
+const { db } = require('../db/dbConfig');
 
-const getAllRestaurants =  async () => {
+// Fetch all restaurants
+const getAllRestaurants = async () => {
     try {
-        const allRestaurants = await db.any('SELECT * FROM restaurants')
-        return allRestaurants
+        return await db.any('SELECT * FROM restaurants');
     } catch (error) {
-        return error;
-    }
-}
-
-const getOneRestaurant = async (id) => {
-    try {
-        const oneRestaurant = await db.one("SELECT * FROM restaurants WHERE id=$1", [id]);
-        return oneRestaurant;
-
-    } catch (error) {
-        return error;
-    }
-}; 
-
-const addRestaurant = async (newRestaurant) => {
-    try {
-        const addRestaurant = await db.one(
-            "INSERT INTO restaurants (name, latitude, longitude) VALUES($1, $2, $3) RETURNING *",
-            [
-                newRestaurant.name,
-                newRestaurant.latitude,
-                newRestaurant.longitude
-            ])
-        return addRestaurant;
-    } catch (error) {
-        return error;
-    }
-}
-
-const updateRestaurantInformation = async (updateRestaurant) => {
-    try {
-        const updateRestaurantInfo = await db.one(
-            "UPDATE restaurants SET name=$1, latitude=$2, longitude=$3 WHERE id=$4 RETURNING *",
-            [
-                updateRestaurant.name,
-                updateRestaurant.latitude,
-                updateRestaurant.longitude,
-                updateRestaurant.id
-            ]
-        );
-        return updateRestaurantInfo;
-    } catch (error) {
-        return error;
+        throw new Error('Error retrieving all restaurants: ' + error.message);
     }
 };
 
-const deleteRestaurant = async (id) => {
-    try{
-        const deletedRestaurant = await db.one("DELETE FROM restaurants WHERE id=$1 RETURNING *", id);
-        return deletedRestaurant;
+// Fetch one restaurant by ID
+const getOneRestaurant = async (id) => {
+    try {
+        return await db.one("SELECT * FROM restaurants WHERE id = $1", [id]);
+    } catch (error) {
+        throw new Error(`Error retrieving restaurant with ID ${id}: ` + error.message);
+    }
+};
 
-    } catch (error){
-        return error;
+// Add a new restaurant
+const addRestaurant = async ({ name, latitude, longitude }) => {
+    try {
+        return await db.one(
+            "INSERT INTO restaurants (name, latitude, longitude) VALUES($1, $2, $3) RETURNING *",
+            [name, latitude, longitude]
+        );
+    } catch (error) {
+        throw new Error('Error adding restaurant: ' + error.message);
+    }
+};
+
+// Update restaurant information
+const updateRestaurantInformation = async ({ id, name, latitude, longitude }) => {
+    try {
+        return await db.one(
+            "UPDATE restaurants SET name = $1, latitude = $2, longitude = $3 WHERE id = $4 RETURNING *",
+            [name, latitude, longitude, id]
+        );
+    } catch (error) {
+        throw new Error(`Error updating restaurant with ID ${id}: ` + error.message);
+    }
+};
+
+// Delete a restaurant by ID
+const deleteRestaurant = async (id) => {
+    try {
+        return await db.one("DELETE FROM restaurants WHERE id = $1 RETURNING *", [id]);
+    } catch (error) {
+        throw new Error(`Error deleting restaurant with ID ${id}: ` + error.message);
     }
 };
 
@@ -66,4 +56,5 @@ module.exports = {
     getOneRestaurant, 
     addRestaurant, 
     updateRestaurantInformation, 
-    deleteRestaurant }
+    deleteRestaurant 
+};
