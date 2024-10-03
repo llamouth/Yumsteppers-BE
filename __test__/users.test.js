@@ -206,4 +206,49 @@ describe("Users", () => {
         expect(response.body).toEqual({ error: "Stepper not deleted." });
     });
 
+    it("Should log in a user and return a token", async () => {
+        const loginMockUser = {
+            user_id: 1,
+            username: "testUser",
+            password: "testPassword",
+        };
+
+        const token = jwt.sign(
+            { userId: loginMockUser.user_id, username: loginMockUser.username },
+            process.env.SECRET
+        );
+
+        loginUser.mockResolvedValue(loginMockUser);
+
+        const response = await request(app)
+            .post('/users/login')
+            .send({ username: loginMockUser.username, password: loginMockUser.password });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('user', loginMockUser);
+        expect(response.body).toHaveProperty('token', token);
+    });
+
+    it("Should return 401 for invalid credentials", async () => {
+        loginUser.mockResolvedValue(null);
+
+        const response = await request(app)
+            .post('/users/login')
+            .send({ username: "wrongUser", password: "wrongPassword" });
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({ error: "Invalid username or password" });
+    });
+
+    it("Should return 500 for internal server error", async () => {
+        loginUser.mockRejectedValue(new Error("Internal server error"));
+
+        const response = await request(app)
+            .post('/users/login')
+            .send({ username: "testUser", password: "testPassword" });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: "Internal server error" });
+    });
 });
+
