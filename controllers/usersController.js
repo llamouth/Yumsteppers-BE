@@ -2,6 +2,7 @@ const express = require("express");
 const users = express.Router();
 const jwt = require("jsonwebtoken");
 const { authenticateToken } = require("../auth/auth");
+const stepsController = require("./stepsController")
 const {
   getAllUsers,
   getOneUser,
@@ -11,8 +12,8 @@ const {
   loginUser,
 } = require("../queries/users");
 
-// Middleware for steps
-users.use("/:user_id/steps", authenticateToken, require("./stepsController"));
+
+users.use("/:user_id/steps", authenticateToken, stepsController);
 
 // Get all users
 users.get("/", async (req, res) => {

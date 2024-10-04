@@ -7,7 +7,7 @@ const restaurantsController = require('./controllers/restaurantsControllers')
 const checkinsController = require('./controllers/checkinsController')
 const rewardsController = require('./controllers/rewardsController')
 const googlePlacesController = require('./controllers/googlePlacesController')
-const redemptionsController = require('./controllers/redmptionsController')
+const redemptionsController = require('./controllers/redemptionsController')
 
 // app.use(bodyParser.json());
 app.use(express.json())

@@ -81,7 +81,7 @@ const loginUser = async (user) => {
         if (!loggedInUser) {
             return false; // User not found
         }
-
+        
         const passwordMatch = await bcrypt.compare(password_hash, loggedInUser.password_hash);
         return passwordMatch ? loggedInUser : false; // Return false if password doesn't match
     } catch (err) {

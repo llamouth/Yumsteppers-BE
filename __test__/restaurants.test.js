@@ -122,7 +122,7 @@ describe("Restaurants ", () => {
     });
 
     it("Should return 404 if restaurant ID is not found", async () => {
-        updateRestaurantInformation.mockResolvedValue(null);
+        updateRestaurantInformation.mockResolvedValue({});
 
         const response = await request(app)
             .put('/restaurants/999')
@@ -131,6 +131,7 @@ describe("Restaurants ", () => {
                 latitude: '40.000000',
                 longitude: '-100.000000',
             });
+            console.log(response)
 
         expect(response.status).toBe(404);
         expect(response.body).toEqual({
