@@ -1,113 +1,93 @@
 const { db } = require('../db/dbConfig');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+
+const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10; // Default to 10 if not set
 
 const getAllUsers = async () => {
-    try{
-        const allUsers = await db.any("SELECT * FROM users")
-        return allUsers
+    try {
+        const allUsers = await db.any("SELECT * FROM users");
+        return allUsers;
+    } catch (error) {
+        console.error(error); // Log the error
+        throw new Error("Could not retrieve users");
     }
-  catch(error){
-    console.log(error)
-    return error
- }
-
-}
+};
 
 const getOneUser = async (id) => {
     try {
-        const oneUser = await db.one("SELECT * FROM users WHERE id=$1", id)
-        return oneUser
+        const oneUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
+        if (!oneUser) {
+            throw new Error("User not found");
+        }
+        return oneUser;
     } catch (error) {
-        return error
+        console.error(error);
+        throw new Error("Could not retrieve user");
     }
-}
+};
 
 const createUser = async (user) => {
+    const { username, email, password_hash, latitude, longitude, points_earned } = user;
+
     try {
-        const salt = 10
-        const hashedPassword = await bcrypt.hash(user.password_hash, salt)
-        
+        const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
         const newUser = await db.one(
             "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
-            [
-                user.username, 
-                user.email, 
-                hashedPassword, 
-                user.latitude, 
-                user.longitude, 
-                user.points_earned
-            ] 
-        )
-        return newUser
+            [username, email, hashedPassword, latitude, longitude, points_earned]
+        );
+        return newUser;
     } catch (error) {
-        console.log(error)
-        return error  
+        console.error(error);
+        throw new Error("User creation failed");
     }
-}
+};
 
 const deleteUser = async (id) => {
     try {
-        const deletedUser= await db.one("DELETE FROM users WHERE id=$1 RETURNING *", id)
-        return deletedUser
+        const deletedUserInfo = await db.one("DELETE FROM users WHERE id=$1 RETURNING *", id);
+        return deletedUserInfo;
     } catch (error) {
-        return error
+        console.error(error);
+        throw new Error("User deletion failed");
     }
-}
+};
 
 const updateUser = async (id, newInfo) => {
-    try{
-        const currentUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id)
-
-        const passwordMatch = newInfo.password_hash == currentUser.password_hash
-        let updatedInfo ;
-        
-        if(passwordMatch) {
-            updatedInfo = await db.one("UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6 WHERE id=$7 RETURNING *",
-                [
-                newInfo.username, 
-                newInfo.email, 
-                newInfo.password_hash, 
-                newInfo.latitude, 
-                newInfo.longitude, 
-                newInfo.points_earned
-                ])
-        }else {
-            const salt = 10
-            const hashedPassword = await bcrypt.hash(newInfo.password_hash, salt)
-            updatedInfo = await db.one("UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6 WHERE id=$7 RETURNING *",
-            [
-            newInfo.username, 
-            newInfo.email, 
-            hashedPassword, 
-            newInfo.latitude, 
-            newInfo.longitude, 
-            newInfo.points_earned,
-            id
-            ])
+    try {
+        const currentUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
+        if (!currentUser) {
+            throw new Error("User not found");
         }
-        return updatedInfo  
 
-    }catch(error) {
-        return error
+        const { username, email, password_hash, latitude, longitude, points_earned } = newInfo;
+        const hashedPassword = password_hash ? await bcrypt.hash(password_hash, SALT_ROUNDS) : currentUser.password_hash;
+
+        const updatedUserInfo = await db.one(
+            "UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6 WHERE id=$7 RETURNING *",
+            [username, email, hashedPassword, latitude, longitude, points_earned, id]
+        );
+        return updatedUserInfo;
+    } catch (error) {
+        console.error(error);
+        throw new Error("User update failed");
     }
-}
+};
 
 const loginUser = async (user) => {
+    const { username, password_hash } = user;
+
     try {
-        const loggedInUser = await db.oneOrNone("SELECT * FROM users WHERE username=$1", user.username)
-        if(!loggedInUser){
-            return false
+        const loggedInUser = await db.oneOrNone("SELECT * FROM users WHERE username=$1", username);
+        if (!loggedInUser) {
+            return false; // User not found
         }
-
-        const passwordMatch = await bcrypt.compare(user.password_hash, loggedInUser.password_hash)
-
-        if(!passwordMatch){
-            return false
-        }
-        return loggedInUser
+        
+        const passwordMatch = await bcrypt.compare(password_hash, loggedInUser.password_hash);
+        return passwordMatch ? loggedInUser : false; // Return false if password doesn't match
     } catch (err) {
-        return err
+        console.error(err);
+        throw new Error("Login failed");
     }
-}
+};
 
-module.exports = {getAllUsers,getOneUser,createUser,deleteUser, updateUser, loginUser}
+module.exports = { getAllUsers, getOneUser, createUser, deleteUser, updateUser, loginUser };
