@@ -45,3 +45,10 @@ CREATE TABLE rewards (
     user_id INT REFERENCES users (id) ON DELETE CASCADE,
     restaurant_id INT REFERENCES restaurants (id) ON DELETE CASCADE NOT NULL
 );
+
+CREATE TABLE redemptions ( 
+    id SERIAL PRIMARY KEY,
+    redemption_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    reward_id INT REFERENCES rewards (id) ON DELETE CASCADE,
+    user_id INT REFERENCES users (id) ON DELETE CASCADE
+);

@@ -13,7 +13,6 @@ const {
   loginUser,
 } = require("../queries/users");
 
-//middleware
 
 users.use("/:user_id/steps", authenticateToken, stepsController);
 
