@@ -1,8 +1,8 @@
-const{ getAllSteps, getSingleStep, deleteSteps, updateSteps, createNewSteps } = require("../queries/steps");
+const { getAllSteps, getSingleStep, deleteSteps, updateSteps, createNewSteps } = require("../queries/steps");
 const request = require("supertest");
 const app = require("../app");
 const jwt = require("jsonwebtoken");
-const { authenticateToken } = require('../auth/auth'); 
+// const { authenticateToken } = require('../auth/auth'); 
 
 jest.mock("../queries/steps");
 jest.mock("jsonwebtoken");
@@ -27,24 +27,34 @@ beforeEach(() => {
 });
 
 describe("Steps", () => {
-    it("Should provide a 200 status with an array of objects with all steps of one user from the database", async () => {
-        getAllSteps.mockResolvedValue([mockStep]);
 
-        const mockToken = "valid-token"; // Define a mock token
+    it('should return all steps for an authenticated user with status 200', async () => {
+        // const mockSteps = [{ step: 'Step 1' }, { step: 'Step 2' }];
+        getAllSteps.mockResolvedValue(mockStep.user_id); // Mock successful response
 
-    const response = await request(app)
-        .get("/users/1/steps") // Use a specific user ID instead of ':id'
-        .set("Authorization", `Bearer ${mockToken}`); // Set the Authorization header
+        const response = await request(app)
+            .get('/users/1/steps')
+            .set('Authorization', 'Bearer valid-token'); // Simulate the valid token
 
         expect(response.statusCode).toBe(200);
-        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body).toEqual(mockSteps);
 
-        response.body.forEach(user => {
+        // Ensure each step has the correct properties
+        response.body.forEach(step => {
             expect(typeof step).toBe("object");
             expect(step).toHaveProperty("id");
             expect(step).toHaveProperty("step_count");
             expect(step).toHaveProperty("date");
             expect(step).toHaveProperty("user_id");
         });
+    });
+
+    it('should return a 401 error for invalid token', async () => {
+        const response = await request(app)
+            .get('users/1/steps')
+            .set('Authorization', 'Bearer invalid-token'); // Simulate invalid token
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body).toEqual({ error: 'Unauthorized' });
     });
 });
