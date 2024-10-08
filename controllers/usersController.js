@@ -12,7 +12,6 @@ const {
   loginUser,
 } = require("../queries/users");
 
-
 users.use("/:user_id/steps", authenticateToken, stepsController);
 
 // Get all users
