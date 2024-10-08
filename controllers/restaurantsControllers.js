@@ -55,11 +55,12 @@ restaurants.post("/", async (req, res) => {
 // PUT update restaurant information
 restaurants.put("/:id", async (req, res) => {
     const { id } = req.params;
+    const { newInfo } = req.body;
     const updateRestaurantInfo = await updateRestaurantInformation({id, ...newInfo});
     if(updateRestaurantInfo.id){
-        res.status(200).json({Message: "Restaurant database has been successfully updated", restaurant:updateRestaurantInfo });
+        res.status(200).json({message: "Restaurant database has been successfully updated", restaurant:updateRestaurantInfo });
     }else{
-        res.status(404).json({ error: `Restaurant ID:${id} Can Not Be Found` });
+        res.status(404).json({ error: `Restaurant ID: ${id} cannot be found.` });
     }
 });
 

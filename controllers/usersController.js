@@ -54,7 +54,7 @@ users.post("/", async (req, res) => {
 });
 
 // Delete a user
-users.delete("/:id", authenticateToken, async (req, res) => {
+users.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const deletedUser = await deleteUser(id);
@@ -69,7 +69,7 @@ users.delete("/:id", authenticateToken, async (req, res) => {
 });
 
 // Update a user
-users.put("/:id", authenticateToken, async (req, res) => {
+users.put("/:id", async (req, res) => {
   const newInfo = req.body;
   const { id } = req.params;
   try {
