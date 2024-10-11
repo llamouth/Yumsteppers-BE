@@ -11,6 +11,7 @@ googlePlaces.post('/location', async (req,res) => {
         }
         res.status(200).json(location)
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Failed to get location' })
     }
 })
@@ -46,6 +47,7 @@ googlePlaces.get('/directions', async (req, res) => {
     try {
         const { originLat, originLng, destLat, destLng } = req.query
         const directions = await getDirections(originLat, originLng, destLat, destLng)
+        
         if(directions.error) {
             res.status(400).json({ error: directions.error })
         }

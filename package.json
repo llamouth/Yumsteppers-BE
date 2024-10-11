@@ -3,7 +3,9 @@
     "start": "nodemon server.js",
     "db:init": "psql -U postgres -f db/schema.sql",
     "db:seed": "psql -U postgres -f db/seed.sql",
-    "db:trig": "psql -U postgres -f db/triggers.sql"
+    "db:trig": "psql -U postgres -f db/triggers.sql",
+    "db:alt": "psql -U postgres -f db/alteringTables.sql",
+    "test": "jest"
   },
   "name": "back-end",
   "version": "1.0.0",
@@ -15,6 +17,7 @@
     "@googlemaps/google-maps-services-js": "github:googlemaps/google-maps-services-js",
     "@turf/turf": "^7.1.0",
     "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -25,5 +28,9 @@
     "pg-promise": "^11.9.1",
     "qrcode": "^1.5.4",
     "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
   }
 }

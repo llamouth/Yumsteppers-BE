@@ -14,6 +14,8 @@ const getCurrentLocation = async () => {
     
     const data = await response.json()
 
+
+    
     const { lat, lng } = data.location
     const boundaryCheck = boroughsMap(lat, lng)
 
@@ -45,25 +47,7 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     const destination = `${destLat}, ${destLng}`
     const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=walking&key=${googleMapsAPIKey}`
 
-    if(!originCheck.valid || !destinationCheck.valid) {
-        return { error: 'Origin or destination is outside of the allowed boroughs'}
-    }
 
-    const response = await fetch(url)
-    if(!response.ok) {
-        const error = await response.json()
-        return { error: error.message || 'Failed to get directions'}
-    }
-
-    return await response.json()
-}
-
-const getDistance = async (originLat, originLng, destLat, destLng) => {
-    const originCheck = boroughsMap(originLat, originLng)
-    const destinationCheck = boroughsMap(destLat, destLng)
-    const origin = `${originLat}, ${originLng}`
-    const destination = `${destLat}, ${destLng}`
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=walking&key=${googleMapsAPIKey}`
 
     if(!originCheck.valid || !destinationCheck.valid) {
         return { error: 'Origin or destination is outside of the allowed boroughs'}
@@ -96,7 +80,7 @@ module.exports = {
     getCurrentLocation,
     getNearbyPlaces, 
     getDirections,
-    getDistance,
+    // getDistance,
     validateCheckIn
 }
 

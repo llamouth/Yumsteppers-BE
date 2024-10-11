@@ -16,6 +16,7 @@ const getSingleReward = async (id) => {
         const singleReward = await db.one('SELECT * FROM rewards WHERE id=$1', id)
         return singleReward
     } catch (error) {
+        console.log(error)
         return error
     }
 }
