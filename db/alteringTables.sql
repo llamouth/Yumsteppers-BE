@@ -1,7 +1,10 @@
 \c yum_stepper_dev;
 
 ALTER TABLE restaurants 
-DROP COLUMN cusine_type;
+DROP COLUMN IF EXISTS cuisine_type;
 
 ALTER TABLE restaurants 
-ADD cuisine_type VARCHAR(250);
+ADD COLUMN cuisine_type VARCHAR(250);
+
+
+
