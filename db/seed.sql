@@ -1,3 +1,5 @@
+\c yum_stepper_dev;
+
 INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES
 ('KhiMesha', 'KhiM10@example.com', 'hash1', '40.7128', '-74.0060', 0),
 ('Larrience', 'LAL817@example.com', 'hash2', '40.6782', '-73.9442', 0),
