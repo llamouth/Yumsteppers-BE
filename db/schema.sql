@@ -1,8 +1,7 @@
 DROP DATABASE IF EXISTS yum_stepper_dev;
-
 CREATE DATABASE yum_stepper_dev;
 
-\c yum_stepper_dev; 
+\c yum_stepper_dev;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -11,14 +10,15 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     latitude VARCHAR(255),
     longitude VARCHAR(255),
-    points_earned INT DEFAULT 0 NOT NULL
+    points_earned INT DEFAULT 0 
 );
 
 CREATE TABLE restaurants (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     latitude VARCHAR(255) NOT NULL,
-    longitude VARCHAR(255) NOT NULL
+    longitude VARCHAR(255) NOT NULL,
+    place_id VARCHAR(250)
 );
 
 CREATE TABLE steps (

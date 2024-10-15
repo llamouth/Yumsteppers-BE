@@ -25,19 +25,39 @@ users.get("/", async (req, res) => {
 });
 
 // Get one user
+// users.get("/:id", async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const oneUser = await getOneUser(id);
+//     if (oneUser) {
+//       res.status(200).json(oneUser);
+//     } else {
+//       res.status(404).json({ error: "Stepper Not Found" });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ message: "Error retrieving user." });
+//   }
+// });
+
 users.get("/:id", async (req, res) => {
   const { id } = req.params;
+  console.log("Fetching user with ID:", id); // Log the ID
   try {
     const oneUser = await getOneUser(id);
     if (oneUser) {
+      console.log("User retrieved successfully:", oneUser); // Log retrieved user
       res.status(200).json(oneUser);
     } else {
+      console.log("User not found with ID:", id); // Log when user is not found
       res.status(404).json({ error: "Stepper Not Found" });
     }
   } catch (error) {
+    console.error("Error retrieving user:", error); // More detailed error log
     res.status(500).json({ message: "Error retrieving user." });
   }
 });
+
+
 
 // Create a new user
 users.post("/", async (req, res) => {

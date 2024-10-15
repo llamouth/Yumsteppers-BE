@@ -13,18 +13,33 @@ const getAllUsers = async () => {
     }
 };
 
+// const getOneUser = async (id) => {
+//     try {
+//         const oneUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
+//         if (!oneUser) {
+//             throw new Error("User not found");
+//         }
+//         return oneUser;
+//     } catch (error) {
+//         console.error("Error in getOneUser:", error);
+//         throw new Error("Could not retrieve user");
+//     }
+// };
+
 const getOneUser = async (id) => {
     try {
         const oneUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
         if (!oneUser) {
+            console.error("User not found with ID:", id); // Add more info
             throw new Error("User not found");
         }
         return oneUser;
     } catch (error) {
-        console.error(error);
+        console.error("Database error in getOneUser:", error); // Log full error
         throw new Error("Could not retrieve user");
     }
 };
+
 
 const createUser = async (user) => {
     const { username, email, password_hash, latitude, longitude, points_earned } = user;

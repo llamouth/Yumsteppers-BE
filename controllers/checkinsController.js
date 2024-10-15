@@ -23,22 +23,25 @@ checkins.get('/:id', async (req, res) => {
 })
 
 checkins.post('/', async (req, res) => {
-    const { restaurantLat, restaurantLng, userLat, userLng } = req.body
-    const restaurantValid = boroughsMap(restaurantLat, restaurantLng)
-    const userValid = boroughsMap(userLat, userLng)
+    const { restaurantLat, restaurantLng, userLat, userLng } = req.body;
+    const restaurantValid = boroughsMap(restaurantLat, restaurantLng);
+    const userValid = boroughsMap(userLat, userLng);
 
-    if(!restaurantValid.valid || !userValid.valid) {
-        return res.status(400).json({ error: 'User or restaurant are outside the allowed boroughs'})
+    if (!restaurantValid.valid || !userValid.valid) {
+        return res.status(400).json({ error: 'User or restaurant are outside the allowed boroughs' });
     }
 
     try {
-        const newCheckIn = await createCheckin(req.body)
-        console.log(newCheckIn)
-        res.status(201).json(newCheckIn)
+        const newCheckIn = await createCheckin(req.body);
+        if (newCheckIn.error) {
+            return res.status(400).json(newCheckIn.error);
+        }
+        res.status(201).json(newCheckIn);
     } catch (error) {
-        res.status(500).json(error)
+        console.error("Error creating check-in:", error);
+        res.status(500).json({ error: 'An error occurred while creating a check-in.' });
     }
-})
+});
 
 checkins.delete('/:id', async (req, res) => {
     try {
