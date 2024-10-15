@@ -101,8 +101,8 @@ users.post("/login", async (req, res) => {
       user: userLoggedIn,
       token,
     });
-  } catch (err) {
-    console.log(err);
+  }catch (err) {
+    console.log("work");
     res.status(500).json({ error: "Internal server error" });
   }
 });
