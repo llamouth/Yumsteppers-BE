@@ -1,19 +1,27 @@
-//Map for only Brooklyn, Queens, Manhattan, and the Bronx
+const { point, lineString } = require('@turf/helpers')
+const pointToLineDistance = require('@turf/point-to-line-distance')
+const { BOROUGH_BOUNDS } = require('./geoJSON')
 
-const BOROUGH_BOUNDS = {
-    northeast: { lat: 40.917577, lng: -73.700272 },
-    southwest: { lat: 40.477399, lng:  -74.259090 }
-}
+//checking to see if a point is near the borough line
+const boroughsMap = (lat, lng, maxDistance = 0.1) => {
+    const pointObj = point([lng, lat])  //create point
 
-const boroughsMap = (lat, lng) => {
-    if (
-        lat <= BOROUGH_BOUNDS.northeast.lat && lat >= BOROUGH_BOUNDS.southwest.lng &&
-        lng <= BOROUGH_BOUNDS.northeast.lng &&
-        lng >= BOROUGH_BOUNDS.southwest.lng
-    ) {
-        return { valid: true }
+    let isNear = false
+    let message = "Point is outside the allowed boroughs"
+
+    for(const feature of BOROUGH_BOUNDS.features) {
+       if (feature.geometry.type === "LineString") {
+        const line = lineString(feature.geometry.coordinates)
+        const distanceToLine = pointToLineDistance(pointObj, line, { units: 'kilometers'})
+
+        if(distanceToLine <= maxDistance ) {
+           isNear = true
+           message = "Point is near the borough"
+           break; 
         }
-        return { valid: false, message: 'Location is out of bounds' }
+       } 
+    }
+    return { valid: isNear, message }
 }
 
 module.exports = { boroughsMap }

@@ -1,6 +1,7 @@
 const express = require('express')
 const checkins = express.Router()
 const { getAllCheckins, getSingleCheckin, createCheckin, deleteCheckin } = require('../queries/checkins')
+const { boroughsMap } = require('../utils/geoUtils')
 
 checkins.get('/', async ( req, res ) => {
     try {
@@ -22,14 +23,25 @@ checkins.get('/:id', async (req, res) => {
 })
 
 checkins.post('/', async (req, res) => {
-    try {
-        const newCheckIn = await createCheckin(req.body)
-        console.log(newCheckIn)
-        res.status(201).json(newCheckIn)
-    } catch (error) {
-        res.status(500).json(error)
+    const { restaurantLat, restaurantLng, userLat, userLng } = req.body;
+    const restaurantValid = boroughsMap(restaurantLat, restaurantLng);
+    const userValid = boroughsMap(userLat, userLng);
+
+    if (!restaurantValid.valid || !userValid.valid) {
+        return res.status(400).json({ error: 'User or restaurant are outside the allowed boroughs' });
     }
-})
+
+    try {
+        const newCheckIn = await createCheckin(req.body);
+        if (newCheckIn.error) {
+            return res.status(400).json(newCheckIn.error);
+        }
+        res.status(201).json(newCheckIn);
+    } catch (error) {
+        console.error("Error creating check-in:", error);
+        res.status(500).json({ error: 'An error occurred while creating a check-in.' });
+    }
+});
 
 checkins.delete('/:id', async (req, res) => {
     try {

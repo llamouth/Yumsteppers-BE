@@ -1,12 +1,20 @@
 const express = require("express");
 const restaurants = express.Router();
-const { 
-    getAllRestaurants, 
-    getOneRestaurant, 
-    addRestaurant, 
+const googlePlacesController = require('./googlePlacesController'); // Import the Google Places controller
+const {
+    getAllRestaurants,
+    getOneRestaurant,
+    addRestaurant,
     updateRestaurantInformation,
-    deleteRestaurant 
+    deleteRestaurant
 } = require('../queries/restaurants');
+const { getRestaurantDetailsFromGoogle } = require('../queries/googlePlaces'); // Import Google Places query
+const { getYelpBusinessDetails } = require('../queries/yelp'); // Import Yelp query
+const { mergeRestaurantDetails } = require('../utils/mergeRestaurantDetails');
+
+
+// Merge Google Places controller under specific restaurant routes
+restaurants.use("/:restaurant_id/googlePlaces", googlePlacesController);
 
 // Centralized error handling function
 const handleError = (res, error, message = "An error occurred") => {
@@ -25,22 +33,52 @@ restaurants.get("/", async (req, res) => {
 });
 
 // GET one restaurant by ID
-restaurants.get('/:id', async (req, res) => {
+
+restaurants.get('/details/:id', async (req, res) => {
     const { id } = req.params;
+
     try {
-        const oneRestaurant = await getOneRestaurant(id);
-        if (oneRestaurant) {
-            return res.status(200).json(oneRestaurant);
+        let restaurant = await getOneRestaurant(id);
+        if (!restaurant) {
+            return res.status(404).json({ error: `Restaurant ID: ${id} does not exist.` });
         }
-        res.status(404).json({ error: `Restaurant ID: ${id} does not exist.` });
+
+        let googleDetails = {};
+        let yelpDetails = {};
+
+        // Get Google Places details if `place_id` exists in the restaurant data
+        if (restaurant.place_id) {
+            console.log("Fetching Google details for place_id:", restaurant.place_id);
+            googleDetails = await getRestaurantDetailsFromGoogle(restaurant.place_id);
+            if (googleDetails.error) {
+                console.error(`Error fetching Google details for ${restaurant.place_id}:`, googleDetails.error);
+                googleDetails = {};
+            }
+        }
+
+        // Get Yelp details based on restaurant name and location
+        yelpDetails = await getYelpBusinessDetails(restaurant.name, restaurant.latitude, restaurant.longitude);
+        if (yelpDetails.error) {
+            console.error(`Error fetching Yelp details for ${restaurant.name}:`, yelpDetails.error);
+            yelpDetails = {};
+        }
+
+        // Merge all information into a unified structure
+        const mergedDetails = mergeRestaurantDetails(restaurant, googleDetails, yelpDetails);
+
+        res.status(200).json({ data: mergedDetails });
     } catch (error) {
-        handleError(res, error, "Error retrieving the restaurant.");
+        console.error('Error fetching restaurant details:', error);
+        res.status(500).json({ error: 'Failed to get restaurant details.' });
     }
 });
 
+
+   
+
 // POST add a new restaurant
 restaurants.post("/", async (req, res) => {
-    const { body } = req; // Destructure request body
+    const { body } = req;
     try {
         const addNewRestaurant = await addRestaurant(body);
         res.status(201).json({
@@ -56,11 +94,15 @@ restaurants.post("/", async (req, res) => {
 restaurants.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { newInfo } = req.body;
-    const updateRestaurantInfo = await updateRestaurantInformation({id, ...newInfo});
-    if(updateRestaurantInfo.id){
-        res.status(200).json({message: "Restaurant database has been successfully updated", restaurant:updateRestaurantInfo });
-    }else{
-        res.status(404).json({ error: `Restaurant ID: ${id} cannot be found.` });
+    try {
+        const updateRestaurantInfo = await updateRestaurantInformation({ id, ...newInfo });
+        if (updateRestaurantInfo.id) {
+            res.status(200).json({ message: "Restaurant database has been successfully updated", restaurant: updateRestaurantInfo });
+        } else {
+            res.status(404).json({ error: `Restaurant ID: ${id} cannot be found.` });
+        }
+    } catch (error) {
+        handleError(res, error, "Error updating restaurant.");
     }
 });
 
