@@ -2,7 +2,7 @@ const express = require("express");
 const users = express.Router();
 const jwt = require("jsonwebtoken");
 const { authenticateToken } = require("../auth/auth");
-const stepsController = require("./stepsController")
+const stepsController = require("./stepsController");
 const {
   getAllUsers,
   getOneUser,
@@ -17,10 +17,14 @@ users.use("/:user_id/steps", authenticateToken, stepsController);
 // Get all users
 users.get("/", async (req, res) => {
   try {
+    // console.log("hello world");
+    // res.send("heeeeeey");
     const allUsers = await getAllUsers();
     res.status(200).json(allUsers);
   } catch (error) {
-    res.status(500).json({ message: "Database error, no users were retrieved from the database." });
+    res.status(500).json({
+      message: "Database error, no users were retrieved from the database.",
+    });
   }
 });
 
@@ -56,8 +60,6 @@ users.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Error retrieving user." });
   }
 });
-
-
 
 // Create a new user
 users.post("/", async (req, res) => {
@@ -95,7 +97,10 @@ users.put("/:id", async (req, res) => {
   try {
     const updatedUserInfo = await updateUser(id, newInfo);
     if (updatedUserInfo) {
-      res.status(200).json({ message: "Stepper updated successfully", user: updatedUserInfo });
+      res.status(200).json({
+        message: "Stepper updated successfully",
+        user: updatedUserInfo,
+      });
     } else {
       res.status(404).json({ error: "Stepper can not be found" });
     }
@@ -121,7 +126,7 @@ users.post("/login", async (req, res) => {
       user: userLoggedIn,
       token,
     });
-  }catch (err) {
+  } catch (err) {
     console.log("work");
     res.status(500).json({ error: "Internal server error" });
   }

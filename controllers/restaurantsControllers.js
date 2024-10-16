@@ -39,6 +39,7 @@ restaurants.get('/details/:id', async (req, res) => {
 
     try {
         let restaurant = await getOneRestaurant(id);
+        res.status(200).json(restaurant);
         if (!restaurant) {
             return res.status(404).json({ error: `Restaurant ID: ${id} does not exist.` });
         }
@@ -93,7 +94,7 @@ restaurants.post("/", async (req, res) => {
 // PUT update restaurant information
 restaurants.put("/:id", async (req, res) => {
     const { id } = req.params;
-    
+
     try {
         const updateRestaurantInfo = await updateRestaurantInformation({ id, ...req.body });
         if (updateRestaurantInfo.id) {
