@@ -93,9 +93,9 @@ restaurants.post("/", async (req, res) => {
 // PUT update restaurant information
 restaurants.put("/:id", async (req, res) => {
     const { id } = req.params;
-    const { newInfo } = req.body;
+    
     try {
-        const updateRestaurantInfo = await updateRestaurantInformation({ id, ...newInfo });
+        const updateRestaurantInfo = await updateRestaurantInformation({ id, ...req.body });
         if (updateRestaurantInfo.id) {
             res.status(200).json({ message: "Restaurant database has been successfully updated", restaurant: updateRestaurantInfo });
         } else {
