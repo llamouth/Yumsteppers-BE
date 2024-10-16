@@ -31,11 +31,11 @@ const addRestaurant = async ({ name, latitude, longitude }) => {
 };
 
 // Update restaurant information
-const updateRestaurantInformation = async ({ id, name, latitude, longitude }) => {
+const updateRestaurantInformation = async ({ id, name, latitude, longitude, description, cuisine_type, place_id }) => {
     try {
         return await db.one(
-            "UPDATE restaurants SET name=$1, latitude=$2, longitude=$3 WHERE id=$4 RETURNING *",
-            [name, latitude, longitude, id]
+            "UPDATE restaurants SET name=$1, latitude=$2, longitude=$3, description=$4, cuisine_type=$5 place_id=$6 WHERE id=$7 RETURNING *",
+            [name, latitude, longitude, description, cuisine_type, place_id, id]
         );
     } catch (error) {
         throw new Error('Error updating restaurant information: ' + error.message);
