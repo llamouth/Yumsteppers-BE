@@ -52,6 +52,7 @@ CREATE TABLE rewards (
     expiration_date TIMESTAMP NOT NULL,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
     restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE NOT NULL
+    points_required INT
 );
 
 -- Create redemptions table

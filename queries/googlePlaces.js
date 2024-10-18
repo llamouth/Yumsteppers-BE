@@ -99,7 +99,6 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
     if (!originCheck.valid || !destinationCheck.valid) {
         return { error: 'Origin or destination is outside of the allowed boroughs' };
     }
-    console.log(googleMapsAPIKey)
 
     const origin = `${originLat},${originLng}`;
     const destination = `${destLat},${destLng}`;
@@ -114,7 +113,6 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
 
         
         const data = await response.json();
-        console.log(data)
         
         if (data.routes.length > 0) {
             return { directions: data.routes[0] };

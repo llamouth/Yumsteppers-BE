@@ -24,14 +24,8 @@ rewards.get('/:id', async (req, res) => {
 })
 
  rewards.post('/', async (req, res) => {
-    const { lat, lng, details, expiration_date }  = req.body
-    const locationCheck = boroughsMap(lat, lng)
     const { error } = rewardSchema.validate(req.body)
-
-    if (!locationCheck.valid) {
-        return res.status(400).json({ error: locationCheck.message })
-    }
-
+    
     if (error) {
         return res.status(400).json({ message: error.details[0].message })
     }
@@ -56,17 +50,12 @@ rewards.get('/:id', async (req, res) => {
 
  rewards.put('/:id', async (req, res) => {
     const { id } = req.params
-    const { lat, lng } = req.body
-    const locationCheck = boroughsMap(lat, lng)
     const { error } = rewardSchema.validate(req.body)
-
-    if(!locationCheck.valid) {
-        return res.status(400).json({ error: locationCheck.message })
-    }
 
     if (error) {
         return res.status(400).json({ message: error.details[0].message })
     }
+
     try {
         const updatedReward = await updateReward(id, req.body)
         res.status(200).json(updatedReward)
