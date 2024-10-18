@@ -1,3 +1,5 @@
+// routes/stepsController.js
+
 const express = require('express');
 const steps = express.Router({ mergeParams: true });
 const {
@@ -8,6 +10,7 @@ const {
     createNewSteps,
 } = require('../queries/steps');
 
+// Get all steps for a user
 steps.get('/', async (req, res) => {
     const { user_id } = req.params;
     try {
@@ -19,6 +22,7 @@ steps.get('/', async (req, res) => {
     }
 });
 
+// Get a single step by ID for a user
 steps.get('/:id', async (req, res) => {
     const { user_id, id } = req.params;
     try {
@@ -33,6 +37,7 @@ steps.get('/:id', async (req, res) => {
     }
 });
 
+// Delete a step by ID for a user
 steps.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -47,6 +52,7 @@ steps.delete('/:id', async (req, res) => {
     }
 });
 
+// Update a step by ID for a user
 steps.put('/:id', async (req, res) => {
     const { user_id, id } = req.params;
     try {
@@ -61,14 +67,21 @@ steps.put('/:id', async (req, res) => {
     }
 });
 
+// Create a new step for a user
 steps.post('/', async (req, res) => {
     const { user_id } = req.params;
+  
+    // Ensure you have access to `req.user` if needed
+    if (req.user.userId != user_id) {
+      return res.status(403).json({ error: 'User ID does not match token.' });
+    }
+  
     try {
-        const newStep = await createNewSteps(user_id, req.body);
-        res.status(201).json({ message: 'New step has been created.', step: newStep });
+      const newStep = await createNewSteps(user_id, req.body);
+      res.status(201).json({ message: 'New step has been created.', step: newStep });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error: New step could not be created.' });
+      console.error(error);
+      res.status(500).json({ error: 'Error: New step could not be created.' });
     }
 });
 

@@ -9,9 +9,10 @@ const mergeRestaurantDetails = (dbRestaurant, googleDetails, yelpDetails) => {
         open_now: googleDetails.open_now !== undefined
             ? (googleDetails.open_now ? 'Yes' : 'No')
             : (dbRestaurant.open_now || 'No'),
-        opening_hours: googleDetails.opening_hours.length > 0
+            opening_hours: googleDetails?.opening_hours?.length > 0
             ? googleDetails.opening_hours
             : dbRestaurant.opening_hours || ['Unknown'],
+        
         rating: yelpDetails.rating || dbRestaurant.rating || 'Not Available',
         cuisine_type: yelpDetails.categories && yelpDetails.categories.length > 0
             ? yelpDetails.categories.map(category => category.title).join(', ')
