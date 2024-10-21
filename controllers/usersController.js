@@ -20,8 +20,7 @@ users.use("/:user_id/steps", authenticateToken, stepsController);
 // Get all users
 users.get("/", async (req, res) => {
   try {
-    // console.log("hello world");
-    // res.send("heeeeeey");
+    console.log("hello world");
     const allUsers = await getAllUsers();
     res.status(200).json(allUsers);
   } catch (error) {

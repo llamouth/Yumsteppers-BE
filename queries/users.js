@@ -6,6 +6,7 @@ const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10; // Default to 10 if
 // Get all users
 const getAllUsers = async () => {
     try {
+        console.log('Work')
         const allUsers = await db.any("SELECT * FROM users");
         return allUsers;
     } catch (error) {
@@ -33,10 +34,10 @@ const getOneUser = async (id) => {
 // queries/users.js
 
 const createUser = async (user) => {
-    const { username, email, password, latitude = 0.0, longitude = 0.0, points_earned = 0 } = user;
+    const { username, email, password_hash, latitude = 0.0, longitude = 0.0, points_earned = 0 } = user;
 
     try {
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
         const newUser = await db.one(
             "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
             [username, email, hashedPassword, latitude, longitude, points_earned]
@@ -85,7 +86,7 @@ const updateUser = async (id, newInfo) => {
 
 // Log in a user (Authentication)
 const loginUser = async (user) => {
-    const { username, password } = user;
+    const { username, password_hash } = user;
 
     try {
         console.log('Attempting to log in user:', username);
@@ -96,7 +97,9 @@ const loginUser = async (user) => {
         }
 
         // Compare the provided password with the hashed password stored in the database
-        const passwordMatch = await bcrypt.compare(password, loggedInUser.password_hash);
+        console.log(loggedInUser)
+        const passwordMatch = await bcrypt.compare(password_hash, loggedInUser.password_hash);
+        console.log(passwordMatch)
         if (!passwordMatch) {
             console.error('Password mismatch for user:', username);
             return false; // Password doesn't match
