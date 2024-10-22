@@ -49,8 +49,6 @@ const createUser = async (user) => {
     }
 };
 
-
-
 // Delete a user by ID
 const deleteUser = async (id) => {
     try {

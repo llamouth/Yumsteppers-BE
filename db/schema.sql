@@ -55,6 +55,15 @@ CREATE TABLE rewards (
     points_required INT
 );
 
+CREATE TABLE user_rewards (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    reward_id INT REFERENCES rewards(id) ON DELETE CASCADE,
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    redeemed BOOLEAN DEFAULT FALSE,
+    redeemed_at TIMESTAMP
+);
+
 -- Create redemptions table
 CREATE TABLE redemptions ( 
     id SERIAL PRIMARY KEY,

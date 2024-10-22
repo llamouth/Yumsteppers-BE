@@ -5,6 +5,7 @@ const users = express.Router();
 const jwt = require("jsonwebtoken");
 const { authenticateToken } = require("../auth/auth");
 const stepsController = require("./stepsController");
+const userRewardsController = require('./userRewardsController')
 const {
   getAllUsers,
   getOneUser,
@@ -16,11 +17,11 @@ const {
 
 // Middleware for handling steps-related routes
 users.use("/:user_id/steps", authenticateToken, stepsController);
+users.use("/:user_id/rewards", authenticateToken, userRewardsController);
 
 // Get all users
 users.get("/", async (req, res) => {
   try {
-    console.log("hello world");
     const allUsers = await getAllUsers();
     res.status(200).json(allUsers);
   } catch (error) {
@@ -32,11 +33,11 @@ users.get("/", async (req, res) => {
 // Get one user by ID
 users.get("/:id", async (req, res) => {
   const { id } = req.params;
-  console.log("Fetching user with ID:", id);
+  // console.log("Fetching user with ID:", id);
   try {
     const oneUser = await getOneUser(id);
     if (oneUser) {
-      console.log("User retrieved successfully:", oneUser);
+      // console.log("User retrieved successfully:", oneUser);
       res.status(200).json(oneUser);
     } else {
       console.error("User not found with ID:", id);
