@@ -33,10 +33,15 @@ const getOneUser = async (id) => {
 // Create a new user (Sign-Up)
 // queries/users.js
 
+// Ensure password_hash is provided before hashing
 const createUser = async (user) => {
     const { username, email, password_hash, latitude = 0.0, longitude = 0.0, points_earned = 0 } = user;
 
     try {
+        if (!password_hash) {
+            throw new Error('Password is required');
+        }
+        
         const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
         const newUser = await db.one(
             "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
@@ -48,6 +53,8 @@ const createUser = async (user) => {
         throw new Error("User creation failed");
     }
 };
+
+
 
 // Delete a user by ID
 const deleteUser = async (id) => {
@@ -84,7 +91,7 @@ const updateUser = async (id, newInfo) => {
 
 // Log in a user (Authentication)
 const loginUser = async (user) => {
-    const { username, password_hash } = user;
+    const { username, password } = user; // 'password' is the plain text password provided by the user
 
     try {
         console.log('Attempting to log in user:', username);
@@ -94,10 +101,12 @@ const loginUser = async (user) => {
             return false; // User not found
         }
 
-        // Compare the provided password with the hashed password stored in the database
-        console.log(loggedInUser)
-        const passwordMatch = await bcrypt.compare(password_hash, loggedInUser.password_hash);
-        console.log(passwordMatch)
+        // Log the stored password hash from the database and the provided plain text password
+        console.log('Stored Password Hash:', loggedInUser.password_hash);
+        console.log('Provided Password:', password);
+
+        // Compare the provided plain text password with the stored hashed password
+        const passwordMatch = await bcrypt.compare(password, loggedInUser.password_hash); // password vs password_hash
         if (!passwordMatch) {
             console.error('Password mismatch for user:', username);
             return false; // Password doesn't match
@@ -110,5 +119,7 @@ const loginUser = async (user) => {
         throw new Error("Login failed");
     }
 };
+
+
 
 module.exports = { getAllUsers, getOneUser, createUser, deleteUser, updateUser, loginUser };

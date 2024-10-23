@@ -51,8 +51,8 @@ CREATE TABLE rewards (
     details VARCHAR(255) NOT NULL,
     expiration_date TIMESTAMP NOT NULL,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE NOT NULL
-    points_required INT
+    restaurant_id INT REFERENCES restaurants(id) ON DELETE CASCADE NOT NULL,
+    points_required INT -- Comma added here
 );
 
 CREATE TABLE user_rewards (

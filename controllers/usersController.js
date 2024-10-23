@@ -51,23 +51,33 @@ users.get("/:id", async (req, res) => {
 
 
 // Create a new user (Registration)
+// Check the request body in the signup route
 users.post("/", async (req, res) => {
   try {
-    const newUser = await createUser(req.body);
-    
-    // Generate a token for the new user
-    const token = jwt.sign(
-      { userId: newUser.id, username: newUser.username },
-      process.env.SECRET,
-      { expiresIn: '1h' }
-    );
-    
-    res.status(201).json({ token, newUser });
+      const { username, email, password } = req.body;
+
+      // Ensure all required fields are provided
+      if (!username || !email || !password) {
+          return res.status(400).json({ error: "Username, email, and password are required" });
+      }
+
+      // Create user
+      const newUser = await createUser({ username, email, password_hash: password });
+      
+      // Generate token
+      const token = jwt.sign(
+          { userId: newUser.id, username: newUser.username },
+          process.env.SECRET,
+          { expiresIn: '1h' }
+      );
+      
+      res.status(201).json({ token, newUser });
   } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ error: "User creation failed: " + error.message });
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "User creation failed: " + error.message });
   }
 });
+
 
 // User login
 users.post("/login", async (req, res) => {
@@ -129,30 +139,6 @@ users.put("/:id", async (req, res) => {
   }
 });
 
-
-
-// User login
-users.post("/login", async (req, res) => {
-  try {
-    const userLoggedIn = await loginUser(req.body);
-    if (!userLoggedIn) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
-
-    const token = jwt.sign(
-      { userId: userLoggedIn.user_id, username: userLoggedIn.username },
-      process.env.SECRET
-    );
-
-    res.status(200).json({
-      user: userLoggedIn,
-      token,
-    });
-  } catch (err) {
-    console.log("work");
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 
 module.exports = users;

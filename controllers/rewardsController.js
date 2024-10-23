@@ -2,7 +2,6 @@ const express = require('express')
 const { getAllRewards, getSingleReward, createReward, deleteReward, updateReward } = require('../queries/rewards')
 const { rewardSchema } = require('../validations/rewardValidation')
 const rewards = express.Router()
-const { boroughsMap } = require('../utils/geoUtils')
 
 rewards.get('/', async (req, res) => {
     try {

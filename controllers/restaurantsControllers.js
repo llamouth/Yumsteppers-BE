@@ -39,7 +39,7 @@ restaurants.get('/details/:id', async (req, res) => {
 
     try {
         let restaurant = await getOneRestaurant(id);
-        res.status(200).json(restaurant);
+
         if (!restaurant) {
             return res.status(404).json({ error: `Restaurant ID: ${id} does not exist.` });
         }
@@ -47,32 +47,20 @@ restaurants.get('/details/:id', async (req, res) => {
         let googleDetails = {};
         let yelpDetails = {};
 
-        // Get Google Places details if `place_id` exists in the restaurant data
         if (restaurant.place_id) {
-            console.log("Fetching Google details for place_id:", restaurant.place_id);
             googleDetails = await getRestaurantDetailsFromGoogle(restaurant.place_id);
-            if (googleDetails.error) {
-                console.error(`Error fetching Google details for ${restaurant.place_id}:`, googleDetails.error);
-                googleDetails = {};
-            }
         }
 
-        // Get Yelp details based on restaurant name and location
         yelpDetails = await getYelpBusinessDetails(restaurant.name, restaurant.latitude, restaurant.longitude);
-        if (yelpDetails.error) {
-            console.error(`Error fetching Yelp details for ${restaurant.name}:`, yelpDetails.error);
-            yelpDetails = {};
-        }
 
-        // Merge all information into a unified structure
         const mergedDetails = mergeRestaurantDetails(restaurant, googleDetails, yelpDetails);
 
         res.status(200).json({ data: mergedDetails });
     } catch (error) {
-        console.error('Error fetching restaurant details:', error);
         res.status(500).json({ error: 'Failed to get restaurant details.' });
     }
 });
+
 
 
    

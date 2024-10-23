@@ -49,7 +49,8 @@ const updateSteps = async (user_id, id, steps) => {
 
 // Create a new step for a user
 const createNewSteps = async (user_id, steps) => {
-    const { step_count, date } = steps;
+    const { step_count } = steps;
+    const date = steps.date || new Date().toISOString(); 
     try {
         const newSteps = await db.one('INSERT INTO steps (step_count, user_id, date) VALUES ($1, $2, $3) RETURNING *', [step_count, user_id, date]);
         return newSteps;
