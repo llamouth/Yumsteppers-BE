@@ -34,25 +34,35 @@ const getOneUser = async (id) => {
 // queries/users.js
 
 // Ensure password_hash is provided before hashing
+// Create a new user (Sign-Up)
 const createUser = async (user) => {
     const { username, email, password_hash, latitude = 0.0, longitude = 0.0, points_earned = 0 } = user;
 
     try {
+        // Check if the username or email already exists
+        const existingUser = await db.oneOrNone("SELECT * FROM users WHERE username=$1 OR email=$2", [username, email]);
+        if (existingUser) {
+            throw new Error('Username or email already exists');
+        }
+
         if (!password_hash) {
             throw new Error('Password is required');
         }
-        
+
+        // Hash the password before saving to the database
         const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
         const newUser = await db.one(
-            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", 
+            "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
             [username, email, hashedPassword, latitude, longitude, points_earned]
         );
         return newUser;
     } catch (error) {
         console.error("Error creating user:", error);
-        throw new Error("User creation failed");
+        throw new Error("User creation failed: " + error.message);
     }
 };
+
+
 
 
 
