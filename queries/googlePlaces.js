@@ -1,5 +1,7 @@
 const { googleMapsAPIKey } = require('../db/dbConfig');
-const { boroughsMap } = require('../utils/geoUtils');
+// const { boroughsMap } = require('../utils/geoUtils');
+const polyline = require('@mapbox/polyline');
+
 
 // Function to get the user's current location
 // const getCurrentLocation = async () => {
@@ -24,10 +26,10 @@ const { boroughsMap } = require('../utils/geoUtils');
 
 // Function to get nearby places based on a user's location
 const getNearbyPlaces = async (lat, lng) => {
-    const boundaryCheck = boroughsMap(lat, lng);
-    if (!boundaryCheck.valid) {
-        return { error: boundaryCheck.message };
-    }
+    // const boundaryCheck = boroughsMap(lat, lng);
+    // if (!boundaryCheck.valid) {
+    //     return { error: boundaryCheck.message };
+    // }
 
     const types = ['restaurant', 'cafe', 'bar'].join('|');
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1500&type=${types}&key=${googleMapsAPIKey}`;
@@ -55,8 +57,9 @@ const getRestaurantDetailsFromGoogle = async (placeId) => {
         const response = await fetch(url);
 
         if (!response.ok) {
+            console.error("Google Place Details API responded with status:", response.status);
             const error = await response.json();
-            console.error("Error fetching Google Place Details:", error);
+            console.error("Error response details:", error);
             return { error: "Failed to fetch Google Place details" };
         }
 
@@ -78,10 +81,11 @@ const getRestaurantDetailsFromGoogle = async (placeId) => {
                 latitude: geometry?.location?.lat ?? null,
                 longitude: geometry?.location?.lng ?? null,
                 open_now: current_opening_hours?.open_now || false,
-                opening_hours: current_opening_hours?.weekday_text || [], // Added this line
+                opening_hours: current_opening_hours?.weekday_text || [],
                 website: website || 'N/A',
             };
         } else {
+            console.error("No place details found in response:", placeDetails);
             return { error: 'No place details found.' };
         }
     } catch (error) {
@@ -91,14 +95,11 @@ const getRestaurantDetailsFromGoogle = async (placeId) => {
 };
 
 
-// Function to get directions from user to destination
-const getDirections = async (originLat, originLng, destLat, destLng) => {
-    const originCheck = boroughsMap(originLat, originLng);
-    const destinationCheck = boroughsMap(destLat, destLng);
 
-    if (!originCheck.valid || !destinationCheck.valid) {
-        return { error: 'Origin or destination is outside of the allowed boroughs' };
-    }
+// Function to get directions from user to destination
+
+const getDirections = async (originLat, originLng, destLat, destLng) => {
+    console.log("Starting getDirections with origin:", originLat, originLng, "destination:", destLat, destLng);
 
     const origin = `${originLat},${originLng}`;
     const destination = `${destLat},${destLng}`;
@@ -106,24 +107,61 @@ const getDirections = async (originLat, originLng, destLat, destLng) => {
 
     try {
         const response = await fetch(url);
-        if (!response.ok) {
-            const error = await response.json();
-            return { error: error.message || 'Failed to get directions' };
+        const data = await response.json();
+
+        if (!response.ok || data.status !== 'OK') {
+            console.error("Google Maps Directions API responded with an error:", data);
+            return { error: data.error_message || 'Failed to get directions' };
         }
 
-        
-        const data = await response.json();
-        
-        if (data.routes.length > 0) {
-            return { directions: data.routes[0] };
+        if (data.routes && data.routes.length > 0) {
+            const route = data.routes[0];
+            const polylinePoints = route?.overview_polyline?.points;
+
+            if (polylinePoints) {
+                // Decode the polyline points
+                const decodedPoints = polyline.decode(polylinePoints).map(([latitude, longitude]) => ({
+                    latitude,
+                    longitude,
+                }));
+
+                // Extract detailed steps
+                const steps = route.legs[0].steps.map(step => ({
+                    distance: step.distance.text,
+                    duration: step.duration.text,
+                    instructions: step.html_instructions.replace(/<[^>]+>/g, ''), // Remove HTML tags
+                    start_location: step.start_location,
+                    end_location: step.end_location,
+                    travel_mode: step.travel_mode,
+                }));
+
+                return {
+                    overview_polyline: decodedPoints,
+                    steps,
+                };
+            } else {
+                console.error("overview_polyline points not found in route:", route);
+                return { error: 'overview_polyline points not found in response' };
+            }
         } else {
+            console.warn("No routes found in response.");
             return { error: 'No routes found' };
         }
     } catch (error) {
-        console.error("Error fetching directions:", error);
+        console.error("Error fetching directions from Google Maps API:", error);
         return { error: 'Failed to fetch directions due to network or server error.' };
     }
 };
+
+
+
+
+
+
+
+
+
+
 
 // Function to validate a user's proximity to a location for check-in
 const validateCheckIn = async (userLat, userLng, placeLat, placeLng) => {

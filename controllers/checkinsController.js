@@ -1,56 +1,118 @@
-const express = require('express')
-const checkins = express.Router()
-const { getAllCheckins, getSingleCheckin, createCheckin, deleteCheckin } = require('../queries/checkins')
-const { boroughsMap } = require('../utils/geoUtils')
+// controllers/checkinsController.js
+const express = require('express');
+const checkins = express.Router({ mergeParams: true });
+const {
+  getAllCheckins,
+  getSingleCheckin,
+  createCheckin,
+  deleteCheckin,
+  getUserCheckinCountForRestaurant
+} = require('../queries/checkins');
+const { boroughsMap } = require('../utils/geoUtils');
+const { authenticateToken } = require("../auth/auth");
 
-checkins.get('/', async ( req, res ) => {
-    try {
-        const allCheckins = await getAllCheckins()
-        res.status(200).json(allCheckins)
-    } catch (error) {
-        res.status(500).json(error)
+// Authenticate all check-in routes
+checkins.use(authenticateToken);
+
+// GET all check-ins
+checkins.get('/', async (req, res) => {
+  try {
+    const allCheckins = await getAllCheckins();
+    if (allCheckins.length === 0) {
+      return res.status(200).json([]); // Respond with an empty array
     }
-})
-
-checkins.get('/:id', async (req, res) => {
-    const { id } = req.params
-    try {
-        const singleCheckin = await getSingleCheckin( id )
-        res.status(200).json(singleCheckin)
-    } catch (error) {
-        res.status(500).json(error)
-    }
-})
-
-checkins.post('/', async (req, res) => {
-    const { restaurantLat, restaurantLng, userLat, userLng } = req.body;
-    const restaurantValid = boroughsMap(restaurantLat, restaurantLng);
-    const userValid = boroughsMap(userLat, userLng);
-
-    if (!restaurantValid.valid || !userValid.valid) {
-        return res.status(400).json({ error: 'User or restaurant are outside the allowed boroughs' });
-    }
-
-    try {
-        const newCheckIn = await createCheckin(req.body);
-        if (newCheckIn.error) {
-            return res.status(400).json(newCheckIn.error);
-        }
-        res.status(201).json(newCheckIn);
-    } catch (error) {
-        console.error("Error creating check-in:", error);
-        res.status(500).json({ error: 'An error occurred while creating a check-in.' });
-    }
+    res.status(200).json(allCheckins);
+  } catch (error) {
+    console.error("Error retrieving all check-ins:", error);
+    res.status(500).json({ error: "Error retrieving all check-ins." });
+  }
 });
 
-checkins.delete('/:id', async (req, res) => {
-    try {
-        const { id } = req.params
-        const removedCheckin = await deleteCheckin(id)
-        res.status(200).json({ success: `Successfully deleted checkin` })
-    } catch (error) {
-        res.status(500).json(error)
+// GET a single check-in by ID
+checkins.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const singleCheckin = await getSingleCheckin(id);
+    if (!singleCheckin) {
+      return res.status(404).json({ error: "Check-in not found." });
     }
-})
+    res.status(200).json(singleCheckin);
+  } catch (error) {
+    console.error("Error retrieving check-in:", error);
+    res.status(500).json({ error: "Error retrieving check-in." });
+  }
+});
+
+// POST: Create a new check-in
+checkins.post('/', async (req, res) => {
+  const { userId } = req.user; // Get userId from authenticated user
+  let { restaurant_id, latitude, longitude, receipt_image } = req.body;
+
+  // Log incoming request data
+  console.log("Incoming check-in request:", req.body);
+
+  // Convert latitude and longitude to numbers if they are strings
+  latitude = parseFloat(latitude);
+  longitude = parseFloat(longitude);
+
+  // Validate coordinates
+  if (isNaN(latitude) || isNaN(longitude)) {
+    console.error("Invalid latitude or longitude:", { latitude, longitude });
+    return res.status(400).json({ error: "Invalid latitude or longitude values provided." });
+  }
+
+  // Validate locations using boroughsMap
+  const { valid, message } = boroughsMap(latitude, longitude);
+  if (!valid) {
+    console.error("Location validation failed:", message);
+    return res.status(400).json({ error: message });
+  }
+
+  try {
+    // Check the number of check-ins today
+    const checkinCount = await getUserCheckinCountForRestaurant(userId, restaurant_id);
+    if (checkinCount >= 2) {
+      console.warn(`Check-in limit reached for user ${userId} at restaurant ${restaurant_id}`);
+      // Instead of throwing an error, we send a response indicating the limit is reached
+      return res.status(200).json({
+        message: 'Daily check-in limit reached for this restaurant.',
+        canCheckIn: false,
+      });
+    }
+
+    // Proceed to create check-in
+    const newCheckin = await createCheckin({
+      restaurant_id,
+      user_id: userId,
+      receipt_image,
+      latitude,
+      longitude,
+    });
+
+    res.status(201).json({
+      message: 'Check-in successful',
+      canCheckIn: true,
+      newCheckin
+    });
+  } catch (error) {
+    console.error("Error creating check-in:", error);
+    res.status(500).json({ error: 'An error occurred while creating a check-in.' });
+  }
+});
+
+// DELETE a check-in by ID
+checkins.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const removedCheckin = await deleteCheckin(id);
+    if (!removedCheckin) {
+      return res.status(404).json({ error: 'Check-in not found.' });
+    }
+    res.status(200).json({ message: "Check-in deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting check-in:", error);
+    res.status(500).json({ error: "Error deleting check-in." });
+  }
+});
 
 module.exports = checkins;

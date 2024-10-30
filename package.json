@@ -15,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@googlemaps/google-maps-services-js": "github:googlemaps/google-maps-services-js",
+    "@mapbox/polyline": "^1.2.1",
     "@turf/helpers": "^7.1.0",
     "@turf/point-to-line-distance": "^7.1.0",
     "@turf/turf": "^7.1.0",
