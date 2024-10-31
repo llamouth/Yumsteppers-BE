@@ -14,10 +14,12 @@ const {
   updateUser,
   loginUser,
 } = require("../queries/users");
+const { getUserPoints, updateUserPoints } = require("../queries/points");
+
 
 // Middleware for handling steps, rewards, and check-ins
 users.use("/:user_id/steps", authenticateToken, stepsController);
-users.use("/:user_id/rewards", authenticateToken, userRewardsController);
+users.use("/:user_id/userRewards", authenticateToken, userRewardsController);
 users.use("/:user_id/checkins", authenticateToken, checkinsController); // Handle check-ins for a specific user
 
 // GET all users
@@ -43,6 +45,31 @@ users.get("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error retrieving user:", error);
     res.status(500).json({ message: "Error retrieving user." });
+  }
+});
+
+users.get("/:user_id/points", authenticateToken, async (req, res) => {
+  const { user_id } = req.params;
+  try {
+      const points = await getUserPoints(user_id);
+      res.status(200).json({ points });
+  } catch (error) {
+      console.error("Error retrieving user points:", error);
+      res.status(500).json({ message: "Error retrieving user points" });
+  }
+});
+
+// PUT: Update user's points (e.g., after check-in or step-based actions)
+users.put("/:user_id/points", authenticateToken, async (req, res) => {
+  const { user_id } = req.params;
+  const { pointsToAdd } = req.body;
+
+  try {
+      const updatedPoints = await updateUserPoints(user_id, pointsToAdd);
+      res.status(200).json({ message: "Points updated successfully", updatedPoints });
+  } catch (error) {
+      console.error("Error updating user points:", error);
+      res.status(500).json({ message: "Error updating user points" });
   }
 });
 

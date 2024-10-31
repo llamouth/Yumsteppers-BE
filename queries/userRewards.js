@@ -1,102 +1,132 @@
-// queries/userRewards.js
 const { db } = require("../db/dbConfig");
 
 // Get all user rewards
 const getAllUserRewards = async (user_id) => {
-  try {
-    const allUserRewards = await db.any(
-      "SELECT * FROM user_rewards WHERE user_id=$1",
-      user_id
-    );
-    return allUserRewards;
-  } catch (error) {
-    console.error("Error fetching all user rewards:", error);
-    throw new Error("Could not retrieve user rewards");
-  }
+    try {
+        const allUserRewards = await db.any(
+            `SELECT ur.*, r.details, r.expiration_date, r.points_required, rest.name AS restaurant_name
+             FROM user_rewards ur
+             JOIN rewards r ON ur.reward_id = r.id
+             JOIN restaurants rest ON r.restaurant_id = rest.id
+             WHERE ur.user_id = $1`,
+            user_id
+        );
+        return allUserRewards;
+    } catch (error) {
+        console.error("Error fetching all user rewards:", error);
+        throw new Error("Could not retrieve user rewards");
+    }
 };
 
 // Create a new user reward (Assign a reward to a user)
 const createUserReward = async (userId, rewardId) => {
-  try {
-    // Check if the reward exists
-    const rewardExists = await db.oneOrNone("SELECT * FROM rewards WHERE id = $1", [
-      rewardId,
-    ]);
-
-    if (!rewardExists) {
-      throw new Error(`Reward with id ${rewardId} does not exist.`);
+    // Check if rewardId and userId are provided
+    if (!rewardId || !userId) {
+        console.warn(`Missing parameters: reward_id (${rewardId}), user_id (${userId})`);
+        throw new Error("Missing reward_id or user_id in request.");
     }
 
-    //check if user already had reward
-    const userRewardExists = await db.oneOrNone(
-        "SELECT * FROM user_rewards WHERE user_id = $1 AND reward_id = $2",
-        [userId, rewardId]
-    )
+    try {
+        // Check if the reward assignment already exists
+        const existingReward = await db.oneOrNone(
+            "SELECT * FROM user_rewards WHERE user_id = $1 AND reward_id = $2",
+            [userId, rewardId]
+        );
 
-    if(userRewardExists) {
-        throw new Error(`User already has rewards with id ${rewardId}.`);
+        if (existingReward) {
+            console.warn(`Reward ${rewardId} already assigned to user ${userId}.`);
+            return existingReward; // Return existing entry without creating a duplicate
+        }
+
+        // Check if reward exists in rewards table
+        const reward = await db.oneOrNone("SELECT * FROM rewards WHERE id = $1", [rewardId]);
+        if (!reward) {
+            throw new Error(`Reward with id ${rewardId} does not exist.`);
+        }
+
+        // Create new user reward
+        const newUserReward = await db.one(
+            `INSERT INTO user_rewards (user_id, reward_id, details, expiration_date, points_required)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [userId, rewardId, reward.details, reward.expiration_date, reward.points_required]
+        );
+        return newUserReward;
+    } catch (error) {
+        console.error("Error in creating user reward:", error);
+        throw new Error("User reward creation failed.");
     }
-
-    // Proceed to create the user reward
-    const newUserReward = await db.one(
-      "INSERT INTO user_rewards (user_id, reward_id) VALUES ($1, $2) RETURNING *",
-      [userId, rewardId]
-    );
-    return newUserReward;
-  } catch (error) {
-    throw new Error("User reward creation failed" + error.message);
-  }
 };
+
+
 
 // Redeem a user reward
 const redeemUserReward = async (rewardId, userId) => {
-  try {
-    // Fetch the user reward and associated reward details
-    const reward = await db.one(
-      `SELECT ur.*, r.points_required, r.expiration_date, u.points_earned
-       FROM user_rewards ur
-       JOIN rewards r ON ur.reward_id = r.id
-       JOIN users u ON ur.user_id = u.id
-       WHERE ur.id = $1 AND ur.user_id = $2`,
-      [rewardId, userId]
-    );
+    try {
+        // Check monthly redemption count for the user and reward
+        const monthlyRedemptionCount = await db.oneOrNone(
+            `SELECT COUNT(*) AS count FROM redemptions 
+             WHERE user_id = $1 AND reward_id = $2 
+             AND redemption_date >= date_trunc('month', CURRENT_DATE)`,
+            [userId, rewardId]
+        );
 
-    if(new Date(reward.expiration_date) < new Date()) {
-        throw new Error("Reward has expired or cannot be redeemed");
+        if (monthlyRedemptionCount.count >= 3) {
+            throw new Error("Monthly redemption limit reached for this reward.");
+        }
+
+        // Proceed with redemption checks
+        const reward = await db.oneOrNone(
+            `SELECT ur.*, r.points_required, r.expiration_date, u.points_earned
+             FROM user_rewards ur
+             JOIN rewards r ON ur.reward_id = r.id
+             JOIN users u ON ur.user_id = u.id
+             WHERE ur.reward_id = $1 AND ur.user_id = $2`,
+            [rewardId, userId]
+        );
+
+        if (!reward) throw new Error("Reward not found or already redeemed.");
+        if (new Date(reward.expiration_date) < new Date()) throw new Error("Reward has expired.");
+        if (reward.points_required > reward.points_earned) throw new Error("Insufficient points.");
+
+        // Redeem the reward
+        const redeemedReward = await db.one(
+            `UPDATE user_rewards SET redeemed = TRUE, redeemed_at = CURRENT_TIMESTAMP 
+             WHERE reward_id = $1 AND user_id = $2 RETURNING *`,
+            [rewardId, userId]
+        );
+
+        // Deduct points
+        await db.none(`UPDATE users SET points_earned = points_earned - $1 WHERE id = $2`, 
+            [reward.points_required, userId]
+        );
+
+        // Log redemption
+        await db.none(`INSERT INTO redemptions (user_id, reward_id) VALUES ($1, $2)`, 
+            [userId, rewardId]
+        );
+
+        return redeemedReward;
+    } catch (error) {
+        console.error(`Error redeeming reward ${rewardId} for user ${userId}:`, error);
+        throw new Error(`Reward redemption failed: ${error.message}`);
     }
+};
 
-    if (reward.points_required <= reward.points_earned) {
-      const redeemedReward = await db.one(
-        "UPDATE user_rewards SET redeemed = TRUE, redeemed_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+
+
+
+const deleteUserReward = async (rewardId) => {
+    try {
+      const deletedReward = await db.one(
+        `DELETE FROM user_rewards WHERE id = $1 RETURNING *`,
         [rewardId]
       );
-      // Deduct points after redemption
-      await db.none(
-        "UPDATE users SET points_earned = points_earned - $1 WHERE id = $2",
-        [reward.points_required, userId]
-      );
-      return redeemedReward;
-    } else {
-      throw new Error("Not enough points to redeem this reward.");
+      return deletedReward;
+    } catch (error) {
+      console.error(`Error deleting user reward ${rewardId}:`, error);
+      throw new Error("User reward deletion failed");
     }
-  } catch (error) {
-    throw new Error("Reward redemption failed" + error.message);
-  }
-};
-
-// Delete a user reward (Remove an earned reward)
-const deleteUserReward = async (rewardId) => {
-  try {
-    const deletedReward = await db.one(
-      `DELETE FROM user_rewards WHERE id = $1 RETURNING *`,
-      [rewardId]
-    );
-    return deletedReward;
-  } catch (error) {
-    console.error(`Error deleting user reward ${rewardId}:`, error);
-    throw new Error("User reward deletion failed");
-  }
-};
+  };
 
 module.exports = {
   getAllUserRewards,
@@ -104,3 +134,7 @@ module.exports = {
   redeemUserReward,
   deleteUserReward,
 };
+
+
+
+

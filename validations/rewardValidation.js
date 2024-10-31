@@ -1,12 +1,12 @@
 const Joi = require('joi')
 
 const rewardSchema = Joi.object({
-    date_generated: Joi.date().optional(),
-    details: Joi.string().min(3).required(),
+    qr_code: Joi.string().required(),
+    details: Joi.string().required(),
     expiration_date: Joi.date().greater('now').required(),
-    user_id: Joi.number().integer().positive().optional(),
-    restaurant_id: Joi.number().integer().positive().required(),
-    points_required: Joi.number().integer().positive().required()
-})
+    restaurant_id: Joi.number().required(),
+    points_required: Joi.number().min(0).required(),
+});
+
 
 module.exports = { rewardSchema }

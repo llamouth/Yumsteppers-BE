@@ -22,8 +22,16 @@ INSERT INTO steps (step_count, date, user_id) VALUES
 (750, '2024-09-18', 3);
 
 -- Insert sample rewards
-INSERT INTO rewards (qr_code, details, expiration_date, restaurant_id, points_required)
-VALUES 
-('qr_code_2', 'Second Reward', '2024-12-31', 2, 150),
-('qr_code_3', 'Third Reward', '2024-12-31', 2, 200),
-('qr_code_4', 'Fourth Reward', '2024-12-31', 2, 250);
+-- Insert sample rewards with correct restaurant IDs
+INSERT INTO rewards (qr_code, details, expiration_date, restaurant_id, points_required) VALUES
+('qr_code_1', '10% Off Next Purchase', '2024-12-31', 1, 100),
+('qr_code_2', 'Free Coffee with Breakfast', '2024-12-31', 2, 150),
+('qr_code_3', '20% Discount', '2024-12-31', 1, 200),  
+('qr_code_4', 'Free Dessert with Meal', '2024-12-31', 4, 250),
+('qr_code_5', 'Buy One Get One Free', '2024-12-31', 3, 300),
+('qr_code_6', '30% Off Dinner', '2025-01-15', 2, 350),
+('qr_code_7', 'Free Appetizer', '2025-01-15', 1, 50),
+('qr_code_8', 'Double Points Today', '2024-10-31', 3, 0); 
+
+
+

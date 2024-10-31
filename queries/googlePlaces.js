@@ -1,5 +1,5 @@
 const { googleMapsAPIKey } = require('../db/dbConfig');
-// const { boroughsMap } = require('../utils/geoUtils');
+const { boroughsMap } = require('../utils/geoUtils');
 const polyline = require('@mapbox/polyline');
 
 
@@ -26,10 +26,10 @@ const polyline = require('@mapbox/polyline');
 
 // Function to get nearby places based on a user's location
 const getNearbyPlaces = async (lat, lng) => {
-    // const boundaryCheck = boroughsMap(lat, lng);
-    // if (!boundaryCheck.valid) {
-    //     return { error: boundaryCheck.message };
-    // }
+    const boundaryCheck = boroughsMap(lat, lng);
+    if (!boundaryCheck.valid) {
+        return { error: boundaryCheck.message };
+    }
 
     const types = ['restaurant', 'cafe', 'bar'].join('|');
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1500&type=${types}&key=${googleMapsAPIKey}`;

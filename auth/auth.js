@@ -3,7 +3,8 @@ require('dotenv').config();
 const secret = process.env.SECRET;
 
 const authenticateToken = (req, res, next) => {
-    const token = req.header('Authorization')?.split(' ')[1]; // Extract token from "Bearer <token>"
+    const token = req.header('Authorization')?.split(' ')[1]?.trim(); // Extract token from "Bearer <token>"
+
     if (!token) {
         return res.status(401).json({ error: "Access Denied. No token provided" });
     }

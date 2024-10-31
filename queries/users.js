@@ -6,14 +6,15 @@ const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10; // Default to 10 if
 
 // Get all users
 const getAllUsers = async () => {
-  try {
-    const allUsers = await db.any("SELECT * FROM users");
-    return allUsers;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Could not retrieve users");
-  }
+    try {
+        const users = await db.any("SELECT * FROM users WHERE deleted = FALSE");
+        return users;
+    } catch (error) {
+        console.error("Error retrieving users:", error);
+        throw new Error("Could not retrieve users");
+    }
 };
+
 
 // Get one user by ID
 const getOneUser = async (id) => {
@@ -69,18 +70,16 @@ const createUser = async (user) => {
 };
 
 // Delete a user by ID
-const deleteUser = async (id) => {
-  try {
-    const deletedUserInfo = await db.one(
-      "DELETE FROM users WHERE id=$1 RETURNING *",
-      id
-    );
-    return deletedUserInfo;
-  } catch (error) {
-    console.error(error);
-    throw new Error("User deletion failed");
-  }
+const deleteUser = async (userId) => {
+    try {
+        await db.none("UPDATE users SET deleted = TRUE WHERE id = $1", [userId]);
+        return { message: "User marked as deleted successfully." };
+    } catch (error) {
+        console.error("Error marking user as deleted:", error);
+        throw new Error("Could not delete user");
+    }
 };
+
 
 // Update an existing user
 // Update an existing user

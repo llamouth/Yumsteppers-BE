@@ -24,7 +24,7 @@ checkins.get('/', async (req, res) => {
     res.status(200).json(allCheckins);
   } catch (error) {
     console.error("Error retrieving all check-ins:", error);
-    res.status(500).json({ error: "Error retrieving all check-ins." });
+    res.status(500).json({ error: "An error occurred while retrieving all check-ins." });
   }
 });
 
@@ -39,7 +39,7 @@ checkins.get('/:id', async (req, res) => {
     res.status(200).json(singleCheckin);
   } catch (error) {
     console.error("Error retrieving check-in:", error);
-    res.status(500).json({ error: "Error retrieving check-in." });
+    res.status(500).json({ error: "An error occurred while retrieving the check-in." });
   }
 });
 
@@ -50,6 +50,12 @@ checkins.post('/', async (req, res) => {
 
   // Log incoming request data
   console.log("Incoming check-in request:", req.body);
+
+  // Validate restaurant_id
+  if (!Number.isInteger(restaurant_id)) {
+    console.error("Invalid restaurant ID:", restaurant_id);
+    return res.status(400).json({ error: "Invalid restaurant ID provided." });
+  }
 
   // Convert latitude and longitude to numbers if they are strings
   latitude = parseFloat(latitude);
@@ -73,7 +79,6 @@ checkins.post('/', async (req, res) => {
     const checkinCount = await getUserCheckinCountForRestaurant(userId, restaurant_id);
     if (checkinCount >= 2) {
       console.warn(`Check-in limit reached for user ${userId} at restaurant ${restaurant_id}`);
-      // Instead of throwing an error, we send a response indicating the limit is reached
       return res.status(200).json({
         message: 'Daily check-in limit reached for this restaurant.',
         canCheckIn: false,
@@ -92,7 +97,7 @@ checkins.post('/', async (req, res) => {
     res.status(201).json({
       message: 'Check-in successful',
       canCheckIn: true,
-      newCheckin
+      newCheckin,
     });
   } catch (error) {
     console.error("Error creating check-in:", error);
@@ -111,7 +116,7 @@ checkins.delete('/:id', async (req, res) => {
     res.status(200).json({ message: "Check-in deleted successfully." });
   } catch (error) {
     console.error("Error deleting check-in:", error);
-    res.status(500).json({ error: "Error deleting check-in." });
+    res.status(500).json({ error: "An error occurred while deleting the check-in." });
   }
 });
 

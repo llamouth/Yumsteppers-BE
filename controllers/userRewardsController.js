@@ -1,15 +1,16 @@
-// controllers/userRewardsController.js
 const express = require("express");
 const userRewards = express.Router({ mergeParams: true });
+const { authenticateToken } = require("../auth/auth");
 const {
   getAllUserRewards,
   createUserReward,
   redeemUserReward,
   deleteUserReward,
 } = require("../queries/userRewards");
+const QRCode = require('qrcode');
 
 // Get all rewards for a user
-userRewards.get("/", async (req, res) => {
+userRewards.get("/", authenticateToken, async (req, res) => {
   try {
     const { user_id } = req.params;
     if (!user_id) {
@@ -24,7 +25,7 @@ userRewards.get("/", async (req, res) => {
 });
 
 // Create a new user reward
-userRewards.post("/", async (req, res) => {
+userRewards.post("/", authenticateToken, async (req, res) => {
   const { user_id } = req.params;
   const { reward_id } = req.body;
 
@@ -45,8 +46,9 @@ userRewards.post("/", async (req, res) => {
 });
 
 // Redeem a user reward
-userRewards.put("/:reward_id/redeem", async (req, res) => {
-  const { reward_id, user_id } = req.params;
+userRewards.put("/:reward_id/redeem", authenticateToken, async (req, res) => {
+  const { reward_id } = req.params;
+  const user_id = req.user?.userId; // Get user ID from the authenticated user
 
   if (!reward_id || !user_id) {
     return res.status(400).json({ error: "Missing reward_id or user_id in request." });
@@ -54,15 +56,18 @@ userRewards.put("/:reward_id/redeem", async (req, res) => {
 
   try {
     const redeemedReward = await redeemUserReward(reward_id, user_id);
-    res.status(200).json(redeemedReward);
+
+    const qrCodeData = JSON.stringify({ user_id, reward_id, redeemed_at: new Date() });
+    const qr_code_url = await QRCode.toDataURL(qrCodeData);
+    res.status(200).json({redeemedReward, qr_code_url });
   } catch (error) {
-    console.error(`Error redeeming reward ${reward_id}:`, error);
-    res.status(500).json({ error: "Reward redemption failed." });
+    console.error(`Error redeeming reward ${reward_id} for user ${user_id}:`, error);
+    res.status(500).json({ error: `Reward redemption failed: ${error.message}` });
   }
 });
 
 // Delete a user reward
-userRewards.delete("/:reward_id", async (req, res) => {
+userRewards.delete("/:reward_id", authenticateToken, async (req, res) => {
   const { reward_id } = req.params;
 
   if (!reward_id) {
