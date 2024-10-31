@@ -16,7 +16,7 @@ const getYelpBusinessDetails = async (name, latitude, longitude) => {
             },
         });
 
-        if (response.data.businesses && response.data.businesses.length > 0) {
+        if (response.data.businesses.length > 0) {
             const business = response.data.businesses[0];
             return {
                 id: business.id,

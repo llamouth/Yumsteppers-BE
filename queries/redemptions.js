@@ -5,7 +5,7 @@ const getAllRedemptions = async () => {
         const allRedemptions = await db.manyOrNone('SELECT * FROM redemptions');
         return allRedemptions;
     } catch (error) {
-        return error;
+        throw new Error('Error fetching all redemptions: ' + error.message);
     }
 };
 
@@ -21,15 +21,30 @@ const getSingleRedemption = async (id) => {
 const createRedemption = async (redemption) => {
     try {
         const { reward_id, user_id } = redemption;
-        const newRedemption = await db.one(
-            'INSERT INTO redemptions (reward_id, user_id) VALUES ($1, $2) RETURNING *',
-            [reward_id, user_id]
-        );
-        return newRedemption;
+        const currentMonthStart = new Date().toISOString.slice(0, 7);
+
+        return await db.tx(async t => {
+            const count = await t.one(
+                `SELECT COUNT(*) FROM redemptions
+                WHERE user_id = $1 AND reward_id = $2 AND to_char(redemption_date, 'YYYY-MM') = $3`,
+                [user_id, reward_id, currentMonthStart]
+            );
+
+            if(parseInt(count.count) >= 3) {
+                throw new Error('Redemption limit reached for this month');
+            }
+
+            const newRedemption = await t.one(
+                'INSERT INTO redemptions (reward_id, user_id) VALUES ($1, $2) RETURNING *',
+                [reward_id, user_id]
+            );
+
+            return newRedemption;
+        })
     } catch (error) {
-        return error;
+        throw new Error('Error creathing redemption: '. error.message)
     }
-};
+}
 
 const updateRedemption = async (id, redemption) => {
     try {

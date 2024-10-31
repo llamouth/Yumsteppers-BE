@@ -23,19 +23,22 @@ const getSingleReward = async (id) => {
 
 const createReward = async (reward) => {
     try {
-        const {date_generated, details, expiration_date, user_id, restaurant_id, points_required } = reward
+        const { details, expiration_date, user_id, restaurant_id, points_required } = reward
+
+        if(new Date(expiration_date) <= new Date()) {
+            throw new Error('Expiration date must be in the future.')
+        }
 
         const secret = uuidv4()
 
         reward.secret = secret
 
-        const qrGenerated = await QRCode.toDataURL(JSON.stringify(reward))
+        const qrGenerated = await QRCode.toDataURL(JSON.stringify({ ...reward, secret }))
         
-        const newReward = await db.one('INSERT INTO rewards (qr_code, date_generated, details, expiration_date, user_id, restaurant_id, points_required) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', [ qrGenerated, date_generated || new Date(), details, expiration_date, user_id, restaurant_id, points_required])
+        const newReward = await db.one('INSERT INTO rewards (qr_code, date_generated, details, expiration_date, user_id, restaurant_id, points_required, reward_secret) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *', [ qrGenerated, new Date(), details, expiration_date, user_id, restaurant_id, points_required, secret])
         return newReward
     } catch (error) {
-        console.log(error)
-        return error
+        throw new Error('Error creating reward: ', error.message)
     }
 }
 

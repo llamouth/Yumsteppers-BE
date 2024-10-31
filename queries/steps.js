@@ -49,15 +49,28 @@ const updateSteps = async (user_id, id, steps) => {
 
 // Create a new step for a user
 const createNewSteps = async (user_id, steps) => {
-    const { step_count } = steps;
-    const date = steps.date || new Date().toISOString(); 
+    const { step_count } = steps;  // Make sure points_earned is defined here
+    const date = steps.date || new Date().toISOString(); // Set the date if not provided
+    const points_earned = Math.floor(step_count / 1000) * 10
+
     try {
-        const newSteps = await db.one('INSERT INTO steps (step_count, user_id, date) VALUES ($1, $2, $3) RETURNING *', [step_count, user_id, date]);
-        return newSteps;
+        return await db.tx(async t => {
+            const newSteps = await t.one(
+            'INSERT INTO steps (step_count, points_earned, user_id, date) VALUES ($1, $2, $3, $4) RETURNING *',
+            [step_count, points_earned, user_id, date]
+        );
+        
+        await t.none(
+            'UPDATE users SET points_earned = points_earned + $1 WHERE id = $2',
+            [points_earned, user_id]
+        )
+
+        return newSteps
+    })
     } catch (error) {
-        console.error("Error creating new step:", error);
-        throw new Error("Unable to create step");
+        throw new Error("Unable to create step: ", error.message);
     }
 };
+
 
 module.exports = { getAllSteps, getSingleStep, deleteSteps, updateSteps, createNewSteps };

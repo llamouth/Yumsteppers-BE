@@ -20,14 +20,14 @@ googlePlaces.get('/nearby', async (req, res) => {
 });
 
 // Endpoint to get detailed restaurant information using Google Maps and Yelp
-googlePlaces.get('/details/:restaurant_id', async (req, res) => {
+googlePlaces.get('/details/:place_id', async (req, res) => {
     try {
-        const { restaurant_id } = req.params;
+        const { place_id } = req.params;
 
         // Fetch restaurant information from the database
-        let restaurant = await getOneRestaurant(restaurant_id);
+        let restaurant = await getOneRestaurant(place_id);
         if (!restaurant) {
-            return res.status(404).json({ error: `Restaurant ID: ${restaurant_id} does not exist.` });
+            return res.status(404).json({ error: `Restaurant ID: ${place_id} does not exist.` });
         }
 
         let googleDetails = {};
@@ -78,18 +78,18 @@ googlePlaces.get('/directions', async (req, res) => {
 });
 
 // Endpoint to validate check-in (Optional)
-googlePlaces.post('/validateCheckIn', async (req, res) => {
-    try {
-        const { userLat, userLng, placeLat, placeLng } = req.body;
-        const checkIn = await validateCheckIn(userLat, userLng, placeLat, placeLng);
-        if (checkIn.error) {
-            return res.status(400).json({ error: checkIn.error });
-        }
-        res.status(200).json(checkIn);
-    } catch (error) {
-        console.error('Failed to validate check-in:', error);
-        res.status(500).json({ error: 'Failed to validate check-in' });
-    }
-});
+// googlePlaces.post('/validateCheckIn', async (req, res) => {
+//     try {
+//         const { userLat, userLng, placeLat, placeLng } = req.body;
+//         const checkIn = await validateCheckIn(userLat, userLng, placeLat, placeLng);
+//         if (checkIn.error) {
+//             return res.status(400).json({ error: checkIn.error });
+//         }
+//         res.status(200).json(checkIn);
+//     } catch (error) {
+//         console.error('Failed to validate check-in:', error);
+//         res.status(500).json({ error: 'Failed to validate check-in' });
+//     }
+// });
 
 module.exports = googlePlaces;

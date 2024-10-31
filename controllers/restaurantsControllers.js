@@ -12,8 +12,6 @@ const { getRestaurantDetailsFromGoogle } = require('../queries/googlePlaces'); /
 const { getYelpBusinessDetails } = require('../queries/yelp'); // Import Yelp query
 const { mergeRestaurantDetails } = require('../utils/mergeRestaurantDetails');
 
-
-// Merge Google Places controller under specific restaurant routes
 restaurants.use("/:restaurant_id/googlePlaces", googlePlacesController);
 
 // Centralized error handling function
