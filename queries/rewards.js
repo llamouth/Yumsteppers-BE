@@ -34,6 +34,8 @@ const createReward = async (reward) => {
         reward.secret = secret
 
         const qrGenerated = await QRCode.toDataURL(JSON.stringify({ ...reward, secret }))
+        console.log("Generated QR Code:", qrGenerated);
+
         
         const newReward = await db.one('INSERT INTO rewards (qr_code, date_generated, details, expiration_date, user_id, restaurant_id, points_required, reward_secret) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *', [ qrGenerated, new Date(), details, expiration_date, user_id, restaurant_id, points_required, secret])
         return newReward

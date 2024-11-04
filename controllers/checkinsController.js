@@ -1,4 +1,5 @@
 // controllers/checkinsController.js
+
 const express = require('express');
 const checkins = express.Router({ mergeParams: true });
 const {
@@ -6,7 +7,8 @@ const {
   getSingleCheckin,
   createCheckin,
   deleteCheckin,
-  getUserCheckinCountForRestaurant
+  getUserCheckinCountForRestaurant,
+  getUserCheckInHistory
 } = require('../queries/checkins');
 const { boroughsMap } = require('../utils/geoUtils');
 const { authenticateToken } = require("../auth/auth");
@@ -25,6 +27,19 @@ checkins.get('/', async (req, res) => {
   } catch (error) {
     console.error("Error retrieving all check-ins:", error);
     res.status(500).json({ error: "An error occurred while retrieving all check-ins." });
+  }
+});
+
+// GET user's check-in history
+checkins.get('/history', async (req, res) => {
+  const userId = req.user.userId; // Retrieve userId from authenticated user
+
+  try {
+    const checkInHistory = await getUserCheckInHistory(userId);
+    res.status(200).json(checkInHistory);
+  } catch (err) {
+    console.error("Error fetching check-in history:", err); // Corrected variable name
+    res.status(500).json({ error: 'Error fetching check-in history.' });
   }
 });
 
@@ -94,10 +109,18 @@ checkins.post('/', async (req, res) => {
       longitude,
     });
 
+    const {
+      completion_reward_points,
+      check_in_points,
+      multiplier_points,
+    } = newCheckin;
+
     res.status(201).json({
       message: 'Check-in successful',
       canCheckIn: true,
-      newCheckin,
+      totalPoints: completion_reward_points,      // Renamed from pointsEarned to totalPoints
+      check_in_points: check_in_points,          // Snake_case to match frontend expectations
+      multiplier_points: multiplier_points,      // Snake_case to match frontend expectations
     });
   } catch (error) {
     console.error("Error creating check-in:", error);
@@ -120,4 +143,4 @@ checkins.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = checkins;
+module.exports = checkins; // Correctly export the router only

@@ -8,6 +8,7 @@ const {
     deleteSteps,
     updateSteps,
     createNewSteps,
+    getUserStepHistory
 } = require('../queries/steps');
 
 // Get all steps for a user
@@ -19,6 +20,18 @@ steps.get('/', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error: Steps could not be retrieved.' });
+    }
+});
+
+steps.get('/history', async (req, res) => {
+    const { user_id } = req.params;
+
+    try {
+        const stepHistory = await getUserStepHistory(user_id);
+        res.status(200).json(stepHistory);
+    } catch (error) {
+        console.error("Error fetching step history:", error);
+        res.status(500).json({ error: 'Error fetching step history.' });
     }
 });
 
@@ -36,6 +49,7 @@ steps.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Error: Could not retrieve the specific step.' });
     }
 });
+
 
 // Delete a step by ID for a user
 steps.delete('/:id', async (req, res) => {

@@ -4,7 +4,9 @@ const {
     getSingleRedemption, 
     createRedemption, 
     updateRedemption, 
-    deleteRedemption 
+    deleteRedemption,
+    getUserRedemptions,
+    verifyRedemption
 } = require('../queries/redemptions');
 const redemptions = express.Router();
 
@@ -33,6 +35,19 @@ redemptions.get('/:id', async (req, res) => {
     }
 });
 
+// GET all redemptions for a user
+redemptions.get('/user/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+
+    try {
+        const userRedemptions = await getUserRedemptions(user_id);
+        res.status(200).json(userRedemptions);
+    } catch (error) {
+        console.error(`Error fetching redemptions for user ${user_id}:`, error);
+        res.status(500).json({ error: "Could not retrieve redemptions." });
+    }
+});
+
 // CREATE a new redemption
 redemptions.post('/', async (req, res) => {
     try {
@@ -54,6 +69,26 @@ redemptions.put('/:id', async (req, res) => {
             res.status(404).json({ error: 'Redemption not found' });
         }
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// VERIFY a redemption and generate QR code
+redemptions.put('/verify/:userId/:rewardId', async (req, res) => {
+    const { userId, rewardId } = req.params;
+
+    try {
+        const verifiedRedemption = await verifyRedemption(rewardId, userId);
+        if (verifiedRedemption) {
+            res.status(200).json({
+                message: "Reward redeemed successfully",
+                verifiedRedemption,
+            });
+        } else {
+            res.status(404).json({ error: "Redemption failed or already redeemed" });
+        }
+    } catch (error) {
+        console.error(`Error verifying redemption for user ${userId} and reward ${rewardId}:`, error);
         res.status(500).json({ error: error.message });
     }
 });

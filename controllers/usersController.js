@@ -14,7 +14,7 @@ const {
   updateUser,
   loginUser,
 } = require("../queries/users");
-const { getUserPoints, updateUserPoints } = require("../queries/points");
+const { getUserPoints, updateUserPoints, getPointHistory } = require("../queries/points");
 
 
 // Middleware for handling steps, rewards, and check-ins
@@ -30,6 +30,23 @@ users.get("/", async (req, res) => {
   } catch (error) {
     console.error("Error retrieving all users:", error);
     res.status(500).json({ message: "Database error, no users were retrieved from the database." });
+  }
+});
+
+
+users.get('/:user_id/point-history', authenticateToken, async (req, res) => {
+  const { user_id } = req.params;
+
+  if (req.user.userId != user_id) {
+      return res.status(403).json({ error: 'User ID does not match token.' });
+  }
+
+  try {
+      const pointHistory = await getPointHistory(user_id);
+      res.status(200).json(pointHistory);
+  } catch (error) {
+      console.error("Error fetching point history:", error);
+      res.status(500).json({ error: 'Error fetching point history.' });
   }
 });
 
@@ -58,6 +75,8 @@ users.get("/:user_id/points", authenticateToken, async (req, res) => {
       res.status(500).json({ message: "Error retrieving user points" });
   }
 });
+
+
 
 // PUT: Update user's points (e.g., after check-in or step-based actions)
 users.put("/:user_id/points", authenticateToken, async (req, res) => {
