@@ -57,34 +57,33 @@ userRewards.post("/", authenticateToken, async (req, res) => {
 
 // Redeem a user reward by its unique user_rewards ID
 userRewards.put("/:user_reward_id/redeem", authenticateToken, async (req, res) => {
-    const { user_reward_id } = req.params;
-    const user_id = req.user?.userId;
-  
-    if (!user_reward_id || !user_id) {
+  const { user_reward_id } = req.params;
+  const user_id = req.user.id; // Use `req.user.id` set by authenticateToken middleware
+
+  if (!user_reward_id || !user_id) {
       return res.status(400).json({ error: "Missing user_reward_id or user_id in request." });
-    }
-  
-    console.log("Redeem route accessed for user:", user_id, "with user reward:", user_reward_id);
-  
-    try {
-      // Attempt to redeem reward with user_reward_id to ensure the right instance is redeemed
+  }
+
+  console.log("Redeem route accessed for user:", user_id, "with user reward:", user_reward_id);
+
+  try {
       const redeemedReward = await redeemUserReward(user_reward_id, user_id);
-  
-      // Generate QR code for redeemed reward
+
       const qr_code_url = await generateQRCodeUrl({
-        user_id,
-        user_reward_id,
-        reward_id: redeemedReward.reward_id,
-        restaurant_id: redeemedReward.restaurant_id,
-        redeemed_at: new Date(),
+          user_id,
+          user_reward_id,
+          reward_id: redeemedReward.reward_id,
+          restaurant_id: redeemedReward.restaurant_id,
+          redeemed_at: new Date(),
       });
-  
+
       res.status(200).json({ redeemedReward, qr_code_url });
-    } catch (error) {
+  } catch (error) {
       console.error(`Error redeeming user reward ${user_reward_id} for user ${user_id}:`, error);
       res.status(500).json({ error: `Reward redemption failed: ${error.message}` });
-    }
-  });
+  }
+});
+
   
 
 // Delete a user reward

@@ -62,13 +62,15 @@ const updateReward = async ( id, reward ) => {
 
 }
 
-const deleteReward = async ( id ) => {
+const deleteReward = async (id) => {
     try {
-        const removedReward = await db.one('DELETE FROM rewards WHERE id=$1 RETURNING *', id)
-        return removedReward
+        const removedReward = await db.one('DELETE FROM rewards WHERE id=$1 RETURNING *', [id]);
+        return removedReward;
     } catch (error) {
-        return error
+        console.error(`Error deleting reward with id ${id}:`, error);
+        throw new Error("Reward deletion failed");
     }
-}
+};
+
 
 module.exports = { getAllRewards, getSingleReward, createReward, deleteReward, updateReward }

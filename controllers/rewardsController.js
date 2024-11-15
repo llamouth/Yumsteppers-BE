@@ -63,16 +63,19 @@ rewards.delete('/:id', async (req, res) => {
         return res.status(400).json({ error: "Reward ID is required" });
     }
     try {
-        const removedReward = await deleteReward(id);
-        if (!removedReward) {
+        const existingReward = await getSingleReward(id); // Add check here
+        if (!existingReward) {
             return res.status(404).json({ error: "Reward not found" });
         }
+        
+        const removedReward = await deleteReward(id);
         res.status(200).json({ message: "Reward deleted successfully", removedReward });
     } catch (error) {
         console.error("Error deleting reward:", error);
         res.status(500).json({ error: "Error deleting reward" });
     }
 });
+
 
 // PUT (Update) a reward by ID
 rewards.put('/:id', async (req, res) => {

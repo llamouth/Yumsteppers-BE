@@ -1,6 +1,7 @@
--- schema.sql
+-- Connect to your database
 \c yum_stepper_dev;
 
+-- Drop tables if they exist to reset schema
 DROP TABLE IF EXISTS redemptions CASCADE;
 DROP TABLE IF EXISTS user_rewards CASCADE;
 DROP TABLE IF EXISTS rewards CASCADE;
@@ -17,13 +18,14 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
-    points_earned INT DEFAULT 100,
+    points_earned INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT valid_latitude_users CHECK (latitude BETWEEN -90 AND 90),
     CONSTRAINT valid_longitude_users CHECK (longitude BETWEEN -180 AND 180),
     CONSTRAINT points_non_negative_users CHECK (points_earned >= 0)
 );
+CREATE INDEX idx_users_points_earned ON users (points_earned);
 
 -- Create restaurants table
 CREATE TABLE restaurants (
@@ -53,9 +55,9 @@ CREATE TABLE steps (
 );
 
 -- Create checkins table
+-- Create checkins table
 CREATE TABLE checkins (
     id SERIAL PRIMARY KEY,
-    date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     restaurant_id INTEGER REFERENCES restaurants(id) NOT NULL,
     user_id INTEGER REFERENCES users(id) NOT NULL,
@@ -63,18 +65,24 @@ CREATE TABLE checkins (
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
     distance_walked DOUBLE PRECISION,
+    points_earned INTEGER DEFAULT 0,
     point_multiplier FLOAT DEFAULT 1.0,
-    multiplier_points INT DEFAULT 0, -- Changed from FLOAT to INT and updated default
+    multiplier_points INT DEFAULT 0,
     check_in_points INT DEFAULT 10,
     completion_reward_points INT DEFAULT 0,
     route_completed BOOLEAN DEFAULT FALSE,
+    processed BOOLEAN DEFAULT FALSE, -- NEW COLUMN ADDED HERE
     deleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT valid_checkin_latitude CHECK (latitude BETWEEN -90 AND 90),
     CONSTRAINT valid_checkin_longitude CHECK (longitude BETWEEN -180 AND 180),
     CONSTRAINT distance_walked_non_negative CHECK (distance_walked >= 0),
     CONSTRAINT completion_reward_points_non_negative CHECK (completion_reward_points >= 0)
 );
-CREATE INDEX idx_checkins_user_restaurant_date ON checkins (user_id, restaurant_id, date);
+
+CREATE INDEX idx_checkins_user_restaurant_date ON checkins (user_id, restaurant_id, created_at);
+CREATE INDEX idx_checkins_created_at ON checkins (created_at);
+CREATE INDEX idx_checkins_processed ON checkins (processed);
+
 
 -- Create rewards table
 CREATE TABLE rewards (
@@ -122,5 +130,4 @@ CREATE TABLE redemptions (
     points_spent INT NOT NULL DEFAULT 0,
     deleted BOOLEAN DEFAULT FALSE
 );
-
 CREATE INDEX idx_redemptions_user_reward ON redemptions (user_id, reward_id);

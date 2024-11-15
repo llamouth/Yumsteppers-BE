@@ -18,6 +18,11 @@ const getYelpBusinessDetails = async (name, latitude, longitude) => {
 
         if (response.data.businesses.length > 0) {
             const business = response.data.businesses[0];
+
+            // Add logging to verify Yelp data structure, especially `categories`
+            console.log("Yelp API Business Data:", business);
+            console.log("Yelp Categories:", business.categories);
+
             return {
                 id: business.id,
                 name: business.name,
@@ -26,7 +31,9 @@ const getYelpBusinessDetails = async (name, latitude, longitude) => {
                 rating: business.rating,
                 menu_url: business.menu_url || null, 
             };
+            
         } else {
+            console.log('No Yelp business found for the search criteria.');
             return { error: 'No Yelp business found.' };
         }
     } catch (error) {
