@@ -34,6 +34,8 @@ const createReward = async (reward) => {
         reward.secret = secret
 
         const qrGenerated = await QRCode.toDataURL(JSON.stringify({ ...reward, secret }))
+        console.log("Generated QR Code:", qrGenerated);
+
         
         const newReward = await db.one('INSERT INTO rewards (qr_code, date_generated, details, expiration_date, user_id, restaurant_id, points_required, reward_secret) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *', [ qrGenerated, new Date(), details, expiration_date, user_id, restaurant_id, points_required, secret])
         return newReward
@@ -60,13 +62,15 @@ const updateReward = async ( id, reward ) => {
 
 }
 
-const deleteReward = async ( id ) => {
+const deleteReward = async (id) => {
     try {
-        const removedReward = await db.one('DELETE FROM rewards WHERE id=$1 RETURNING *', id)
-        return removedReward
+        const removedReward = await db.one('DELETE FROM rewards WHERE id=$1 RETURNING *', [id]);
+        return removedReward;
     } catch (error) {
-        return error
+        console.error(`Error deleting reward with id ${id}:`, error);
+        throw new Error("Reward deletion failed");
     }
-}
+};
+
 
 module.exports = { getAllRewards, getSingleReward, createReward, deleteReward, updateReward }

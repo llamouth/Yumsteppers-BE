@@ -1,4 +1,3 @@
-// queries/users.js
 const { db } = require("../db/dbConfig");
 const bcrypt = require("bcrypt");
 
@@ -6,22 +5,20 @@ const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10; // Default to 10 if
 
 // Get all users
 const getAllUsers = async () => {
-    try {
-        const users = await db.any("SELECT * FROM users WHERE deleted = FALSE");
-        return users;
-    } catch (error) {
-        console.error("Error retrieving users:", error);
-        throw new Error("Could not retrieve users");
-    }
+  try {
+    const users = await db.any("SELECT * FROM users WHERE deleted = FALSE");
+    return users;
+  } catch (error) {
+    console.error("Error retrieving users:", error);
+    throw new Error("Could not retrieve users");
+  }
 };
-
 
 // Get one user by ID
 const getOneUser = async (id) => {
   try {
-    const oneUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
+    const oneUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1 AND deleted = FALSE", id);
     if (!oneUser) {
-      console.error("User not found with ID:", id);
       throw new Error("User not found");
     }
     return oneUser;
@@ -33,128 +30,113 @@ const getOneUser = async (id) => {
 
 // Create a new user (Sign-Up)
 const createUser = async (user) => {
-  const {
-    username,
-    email,
-    password_hash,
-    latitude = 0.0,
-    longitude = 0.0,
-    points_earned = 0,
-  } = user;
-
-  try {
-    // Check if the username or email already exists
-    const existingUser = await db.oneOrNone(
-      "SELECT * FROM users WHERE username=$1 OR email=$2",
-      [username, email]
-    );
-    if (existingUser) {
-      throw new Error("Username or email already exists");
-    }
-
-    if (!password_hash) {
-      throw new Error("Password is required");
-    }
-
-    // Hash the password before saving to the database
-    const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
-    const newUser = await db.one(
-      "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [username, email, hashedPassword, latitude, longitude, points_earned]
-    );
-    return newUser;
-  } catch (error) {
-    console.error("Error creating user:", error);
-    throw new Error("User creation failed: " + error.message);
-  }
-};
-
-// Delete a user by ID
-const deleteUser = async (userId) => {
+    const {
+      username,
+      email,
+      password, // Receive the plain text password
+      latitude = 0.0,
+      longitude = 0.0,
+      points_earned = 0, // Set the default points to 100 as per your schema
+    } = user;
+  
     try {
-        await db.none("UPDATE users SET deleted = TRUE WHERE id = $1", [userId]);
-        return { message: "User marked as deleted successfully." };
-    } catch (error) {
-        console.error("Error marking user as deleted:", error);
-        throw new Error("Could not delete user");
-    }
-};
-
-
-// Update an existing user
-// Update an existing user
-const updateUser = async (id, newInfo) => {
-    try {
-      const currentUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1", id);
-      if (!currentUser) {
-        throw new Error("User not found");
+      // Check if the username or email already exists
+      const existingUser = await db.oneOrNone(
+        "SELECT * FROM users WHERE username=$1 OR email=$2",
+        [username, email]
+      );
+      if (existingUser) {
+        throw new Error("Username or email already exists");
       }
   
-      const {
-        username = currentUser.username,
-        email = currentUser.email,
-        password_hash,
-        latitude = currentUser.latitude,
-        longitude = currentUser.longitude,
-        points_earned = currentUser.points_earned,
-        lastCheckInDate = currentUser.lastcheckindate,
-        checkInCount = currentUser.checkincount, // Added checkInCount
-      } = newInfo;
+      if (!password) {
+        throw new Error("Password is required");
+      }
   
-      const hashedPassword = password_hash
-        ? await bcrypt.hash(password_hash, SALT_ROUNDS)
-        : currentUser.password_hash;
-  
-      const updatedUserInfo = await db.one(
-        "UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5, points_earned=$6, lastCheckInDate=$7, checkInCount=$8 WHERE id=$9 RETURNING *",
-        [
-          username,
-          email,
-          hashedPassword,
-          latitude,
-          longitude,
-          points_earned,
-          lastCheckInDate,
-          checkInCount, // Include checkInCount
-          id,
-        ]
+      // Hash the password before saving to the database
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      const newUser = await db.one(
+        "INSERT INTO users (username, email, password_hash, latitude, longitude, points_earned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        [username, email, hashedPassword, latitude, longitude, points_earned]
       );
-      return updatedUserInfo;
+      return newUser;
     } catch (error) {
-      console.error(error);
-      throw new Error("User update failed");
+      console.error("Error creating user:", error);
+      throw new Error("User creation failed: " + error.message);
     }
   };
   
+  
+
+// Delete a user by ID
+const deleteUser = async (userId) => {
+  try {
+    await db.none("UPDATE users SET deleted = TRUE WHERE id = $1", [userId]);
+    return { message: "User marked as deleted successfully." };
+  } catch (error) {
+    console.error("Error marking user as deleted:", error);
+    throw new Error("Could not delete user");
+  }
+};
+
+// Update an existing user
+const updateUser = async (id, newInfo) => {
+  try {
+      const currentUser = await db.oneOrNone("SELECT * FROM users WHERE id=$1 AND deleted = FALSE", id);
+      if (!currentUser) {
+          throw new Error("User not found");
+      }
+
+      const {
+          username = currentUser.username,
+          email = currentUser.email,
+          password, 
+          latitude = currentUser.latitude,
+          longitude = currentUser.longitude,
+      } = newInfo;
+
+      // Hash the password if provided
+      const hashedPassword = password
+          ? await bcrypt.hash(password, SALT_ROUNDS)
+          : currentUser.password_hash;
+
+      const updatedUserInfo = await db.one(
+          "UPDATE users SET username=$1, email=$2, password_hash=$3, latitude=$4, longitude=$5 WHERE id=$6 RETURNING *",
+          [
+              username,
+              email,
+              hashedPassword,
+              latitude,
+              longitude,
+              id,
+          ]
+      );
+      return updatedUserInfo;
+  } catch (error) {
+      console.error("User update failed:", error);
+      throw new Error("User update failed");
+  }
+};
 
 
 // Log in a user (Authentication)
-const loginUser = async (user) => {
-  const { username, password } = user; // 'password' is the plain text password provided by the user
-
+const loginUser = async (username) => {
   try {
-    const loggedInUser = await db.oneOrNone(
-      "SELECT * FROM users WHERE username=$1",
-      username
-    );
-    if (!loggedInUser) {
-      console.error("User not found:", username);
-      return false; // User not found
-    }
-
-    // Compare the provided plain text password with the stored hashed password
-    const passwordMatch = await bcrypt.compare(password, loggedInUser.password_hash);
-    if (!passwordMatch) {
-      console.error("Password mismatch for user:", username);
-      return false; // Password doesn't match
-    }
-
-    return loggedInUser;
+      const loggedInUser = await db.oneOrNone(
+          "SELECT id, username, email, password_hash, latitude, longitude, points_earned FROM users WHERE username=$1 AND deleted = FALSE",
+          username
+      );
+      if (!loggedInUser) {
+          throw new Error('User not found');
+      }
+      return loggedInUser;
   } catch (err) {
-    console.error("Login failed:", err);
-    throw new Error("Login failed");
+      console.error("Login failed:", err);
+      throw new Error("Login failed");
   }
 };
+
+
 
 module.exports = {
   getAllUsers,
