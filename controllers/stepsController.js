@@ -7,7 +7,7 @@ const {
     getSingleStep,
     deleteSteps,
     updateSteps,
-    createNewSteps,
+    createOrUpdateSteps,
     getUserStepHistory
 } = require('../queries/steps');
 
@@ -124,7 +124,7 @@ steps.post('/', async (req, res) => {
             return res.status(409).json({ error: 'Step entry already exists for today.' });
         }
 
-        const newStep = await createNewSteps(user_id, req.body);
+        const newStep = await createOrUpdateSteps(user_id, req.body);
         console.log("New step created:", newStep);
         res.status(201).json({ message: 'New step has been created.', step: newStep });
     } catch (error) {
