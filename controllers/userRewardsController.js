@@ -67,7 +67,7 @@ userRewards.put("/:user_reward_id/redeem", authenticateToken, async (req, res) =
   console.log("Redeem route accessed for user:", user_id, "with user reward:", user_reward_id);
 
   try {
-      const redeemedReward = await redeemUserReward(user_reward_id, user_id);
+      const { redeemedReward, remainingPoints }  = await redeemUserReward(user_reward_id, user_id);
 
       const qr_code_url = await generateQRCodeUrl({
           user_id,
@@ -77,9 +77,18 @@ userRewards.put("/:user_reward_id/redeem", authenticateToken, async (req, res) =
           redeemed_at: new Date(),
       });
 
-      res.status(200).json({ redeemedReward, qr_code_url });
+      res.status(200).json({ redeemedReward, remainingPoints, qr_code_url });
   } catch (error) {
       console.error(`Error redeeming user reward ${user_reward_id} for user ${user_id}:`, error);
+
+      if (
+        error.message.includes('Monthly redemption limit reached') ||
+        error.message.includes('Insufficient points') ||
+        error.message.includes('Reward not found') ||
+        error.message.includes('Reard has expired')
+    ) {
+      return res.status(400).json({ error: error.message })
+    }
       res.status(500).json({ error: `Reward redemption failed: ${error.message}` });
   }
 });

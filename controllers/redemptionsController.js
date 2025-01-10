@@ -54,6 +54,12 @@ redemptions.post('/', async (req, res) => {
         const newRedemption = await createRedemption(req.body);
         res.status(201).json(newRedemption);
     } catch (error) {
+        if (
+            error.message.includes('Monthly redemption limit reached') ||
+            error.message.includes('Insufficient points')
+        ) {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });
@@ -69,6 +75,12 @@ redemptions.put('/:id', async (req, res) => {
             res.status(404).json({ error: 'Redemption not found' });
         }
     } catch (error) {
+        if (
+            error.message.includes('Monthly redemption limit reached') ||
+            error.message.includes('Insufficient points')
+        ) {
+            return res.status(400).json({ error: error.message });
+        }
         res.status(500).json({ error: error.message });
     }
 });

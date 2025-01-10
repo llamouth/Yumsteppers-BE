@@ -1,6 +1,9 @@
 -- Connect to your database
 \c yum_stepper_dev;
 
+-- Enable the uuid-ossp extension for UUID generation
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Drop tables if they exist to reset schema
 DROP TABLE IF EXISTS redemptions CASCADE;
 DROP TABLE IF EXISTS user_rewards CASCADE;
@@ -55,7 +58,6 @@ CREATE TABLE steps (
 );
 
 -- Create checkins table
--- Create checkins table
 CREATE TABLE checkins (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -87,13 +89,13 @@ CREATE INDEX idx_checkins_processed ON checkins (processed);
 -- Create rewards table
 CREATE TABLE rewards (
     id SERIAL PRIMARY KEY,
-    qr_code TEXT UNIQUE NOT NULL,
+    qr_code TEXT UNIQUE,
     date_generated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     details VARCHAR(255) NOT NULL,
     expiration_date TIMESTAMPTZ NOT NULL,
-    user_id INT REFERENCES users(id),
     restaurant_id INT REFERENCES restaurants(id) NOT NULL,
     points_required INT,
+    reward_secret UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
     deleted BOOLEAN DEFAULT FALSE,
     CONSTRAINT points_required_non_negative CHECK (points_required >= 0)
 );

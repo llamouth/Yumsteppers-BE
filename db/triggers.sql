@@ -1,6 +1,7 @@
 -- Connect to your database
 \c yum_stepper_dev;
 
+
 -- Drop existing triggers and functions if they exist
 DROP TRIGGER IF EXISTS trg_calculate_checkin_points ON checkins;
 DROP TRIGGER IF EXISTS trg_limit_reward_redemptions ON redemptions;
@@ -12,6 +13,9 @@ DROP FUNCTION IF EXISTS limit_reward_redemptions();
 DROP FUNCTION IF EXISTS calculate_step_points();
 DROP FUNCTION IF EXISTS award_signup_bonus();
 
+-- Ensure the 'points_earned' column exists in 'steps' table
+ALTER TABLE steps ADD COLUMN IF NOT EXISTS points_earned INT DEFAULT 0;
+
 -- Function: Calculate Check-In Points (Distance-Based)
 CREATE OR REPLACE FUNCTION calculate_checkin_points() 
 RETURNS TRIGGER AS $$
@@ -20,6 +24,7 @@ DECLARE
     user_long DOUBLE PRECISION;
     restaurant_lat DOUBLE PRECISION;
     restaurant_long DOUBLE PRECISION;
+    distance DOUBLE PRECISION := 0.0;
     distance_km DOUBLE PRECISION := 0.0;
     distance_meters DOUBLE PRECISION := 0.0;
     check_in_points INT := 10;
@@ -80,6 +85,10 @@ BEGIN
         multiplier := 1.5;
     ELSIF distance_meters > 805 THEN
         check_in_points := 15;
+        multiplier := 1.5;
+    ELSE
+        -- For distances less than or equal to 805 meters
+        check_in_points := 10;
         multiplier := 1.0;
     END IF;
 
@@ -101,6 +110,8 @@ $$ LANGUAGE plpgsql;
 -- Function: Calculate Step Points
 CREATE OR REPLACE FUNCTION calculate_step_points()
 RETURNS TRIGGER AS $$
+DECLARE
+    old_points_earned INT := 0;
 BEGIN
     IF NEW.step_count < 0 THEN
         RAISE EXCEPTION 'Step count cannot be negative.';
@@ -109,8 +120,20 @@ BEGIN
     -- Calculate step points
     NEW.points_earned := FLOOR(NEW.step_count / 1000.0) * 10;
 
+    IF TG_OP = 'UPDATE' THEN
+        IF OLD.points_earned IS NOT NULL THEN
+            old_points_earned := OLD.points_earned;
+        END IF;
+
     -- Update user's total points
-    UPDATE users SET points_earned = points_earned + NEW.points_earned WHERE id = NEW.user_id;
+    UPDATE users 
+    SET points_earned = points_earned - old_points_earned + NEW.points_earned 
+    WHERE id = NEW.user_id;
+ELSE
+    UPDATE users
+    SET points_earned = points_earned + NEW.points_earned
+    WHERE id = NEW.user_id;
+END IF;
 
     RAISE NOTICE 'Step points: %, Total user points: %', NEW.points_earned, (SELECT points_earned FROM users WHERE id = NEW.user_id);
 
@@ -173,7 +196,7 @@ FOR EACH ROW
 EXECUTE FUNCTION calculate_checkin_points();
 
 CREATE TRIGGER trg_calculate_step_points
-BEFORE INSERT ON steps
+BEFORE INSERT OR UPDATE ON steps
 FOR EACH ROW
 EXECUTE FUNCTION calculate_step_points();
 
@@ -186,3 +209,37 @@ CREATE TRIGGER trg_award_signup_bonus
 BEFORE INSERT ON users
 FOR EACH ROW
 EXECUTE FUNCTION award_signup_bonus();
+
+-- Add the generated checkin_date column to checkins
+ALTER TABLE checkins
+ADD COLUMN IF NOT EXISTS checkin_date DATE;
+
+-- Create trigger function to set checkin_date
+CREATE OR REPLACE FUNCTION set_checkin_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.checkin_date := NEW.created_at::date;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create tigger to set checkin date before insert or udpate
+CREATE TRIGGER trg_set_checkin_date
+BEFORE INSERT OR UPDATE ON checkins
+FOR EACH ROW 
+EXECUTE FUNCTION set_checkin_date();
+
+-- Add the unique constraint to prevent duplicate check-ins per day
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE constraint_name = 'unique_user_restaurant_checkin_date'
+            AND table_name = 'checkins'
+    ) THEN
+        ALTER TABLE checkins
+        ADD CONSTRAINT unique_user_restaurant_checkin_date
+        UNIQUE (user_id, restaurant_id, checkin_date);
+    END IF;
+END;
+$$;

@@ -9,7 +9,6 @@ const {
 const { rewardSchema } = require('../validations/rewardValidation');
 const rewards = express.Router();
 
-// GET all rewards
 rewards.get('/', async (req, res) => {
     try {
         const allRewards = await getAllRewards();
@@ -20,7 +19,6 @@ rewards.get('/', async (req, res) => {
     }
 });
 
-// GET a single reward by ID
 rewards.get('/:id', async (req, res) => {
     const { id } = req.params;
     if (!id) {
@@ -38,7 +36,6 @@ rewards.get('/:id', async (req, res) => {
     }
 });
 
-// POST a new reward
 rewards.post('/', async (req, res) => {
     const { error } = rewardSchema.validate(req.body);
     if (error) {
@@ -50,9 +47,17 @@ rewards.post('/', async (req, res) => {
             return res.status(500).json({ error: "Failed to create reward" });
         }
         res.status(201).json(newReward);
-    } catch (error) {
-        console.error("Error creating reward:", error);
+    } catch (err) {
+        console.error("Error creating reward:", err);
+
+        if(
+            err.message.includes('points required') || 
+            err.message.includes('Expiration date must be in the future')
+        ) {
+            return res.status(400).json({ error: err.message });
+        } else {
         res.status(500).json({ error: "Error creating reward" });
+        }
     }
 });
 
@@ -90,9 +95,16 @@ rewards.put('/:id', async (req, res) => {
             return res.status(404).json({ error: "Reward not found" });
         }
         res.status(200).json(updatedReward);
-    } catch (error) {
-        console.error("Error updating reward:", error);
+    } catch (err) {
+        // console.error("Error updating reward:", error);
+        if (
+            err.message.includes('points required') ||
+            err.message.includes('Expiration date must be in the future')
+        ) {
+            return res.status(400).json({ error: err.message });
+        } else {
         res.status(500).json({ error: "Error updating reward" });
+        }
     }
 });
 
